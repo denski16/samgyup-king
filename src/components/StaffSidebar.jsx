@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-// Added FileBarChart here!
 import {
     LayoutDashboard,
     ShoppingBag,
@@ -9,7 +8,9 @@ import {
     FileBarChart,
     Settings,
     LogOut,
-    Utensils
+    Utensils,
+    Menu,
+    X
 } from 'lucide-react';
 import logoImg from '../assets/LOGO NO BG.png';
 
@@ -17,10 +18,15 @@ export default function StaffSidebar() {
     const navigate = useNavigate();
     const location = useLocation();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const isActive = (path) => location.pathname === path;
 
-    // --- Staff Specific Menu ---
+    // Auto-close menu on navigation
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [location.pathname]);
+
     const navItems = [
         { name: 'DASHBOARD', path: '/staff/dashboard', icon: LayoutDashboard },
         { name: 'INVENTORY', path: '/staff/inventory', icon: Package },
@@ -40,22 +46,56 @@ export default function StaffSidebar() {
 
     return (
         <>
-            <aside className="w-64 bg-gray-900 text-white hidden md:flex flex-col sticky top-0 h-screen shadow-2xl border-r border-white/5">
-                {/* --- BRANDING --- */}
-                <div className="p-8 border-b border-gray-800 flex flex-col items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-white p-2 shadow-2xl">
-                        <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
-                    </div>
-                    <div className="text-center">
-                        <span className="block text-xl font-black tracking-tighter text-orange-500 uppercase leading-none">Samgyup King</span>
-                        <span className="text-[9px] font-black text-gray-500 tracking-[0.3em] uppercase flex items-center justify-center gap-1 mt-2">
-                            <Utensils size={10} className="text-orange-500" /> Staff Portal
-                        </span>
+            {/* --- MOBILE TOP-LEFT MENU BUTTON --- */}
+            <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="md:hidden fixed top-5 left-5 z-[130] p-3 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-md hover:text-orange-600 active:scale-95 transition-all"
+            >
+                <Menu size={24} />
+            </button>
+
+            {/* --- MOBILE BACKDROP --- */}
+            {isMobileMenuOpen && (
+                <div
+                    className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[140] transition-opacity"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
+            {/* --- SIDEBAR --- */}
+            <aside className={`fixed inset-y-0 left-0 z-[150] w-64 bg-gray-900 text-white flex flex-col h-screen shadow-2xl border-r border-white/5 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+
+                <div className="p-8 border-b border-gray-800 relative">
+                    {/* Mobile Close Button */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="md:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-white transition-colors rounded-lg bg-white/5 z-10"
+                    >
+                        <X size={16} />
+                    </button>
+
+                    {/* CLICKABLE BRANDING (Home Button) */}
+                    <div
+                        onClick={() => {
+                            navigate('/staff/dashboard');
+                            setIsMobileMenuOpen(false);
+                        }}
+                        className="flex flex-col items-center gap-4 cursor-pointer group"
+                    >
+                        <div className="w-20 h-20 rounded-full bg-white p-2 shadow-2xl transition-transform duration-300 group-hover:scale-105 group-hover:shadow-orange-900/50">
+                            <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
+                        </div>
+                        <div className="text-center group-hover:opacity-80 transition-opacity">
+                            <span className="block text-xl font-black tracking-tighter text-orange-500 uppercase leading-none">Samgyup King</span>
+                            <span className="text-[9px] font-black text-gray-500 tracking-[0.3em] uppercase flex items-center justify-center gap-1 mt-2">
+                                <Utensils size={10} className="text-orange-500" /> Staff Portal
+                            </span>
+                        </div>
                     </div>
                 </div>
 
                 {/* --- NAV --- */}
-                <nav className="flex-1 p-4 space-y-2 mt-6">
+                <nav className="flex-1 p-4 space-y-2 mt-6 overflow-y-auto custom-scrollbar">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
@@ -69,7 +109,7 @@ export default function StaffSidebar() {
                                     }`}
                             >
                                 <Icon size={20} className={active ? 'text-white' : 'group-hover:text-orange-500'} />
-                                <span className="font-black text-xs tracking-widest">{item.name}</span>
+                                <span className="font-black text-xs tracking-widest uppercase">{item.name}</span>
                             </button>
                         );
                     })}
@@ -77,7 +117,6 @@ export default function StaffSidebar() {
 
                 {/* --- FOOTER --- */}
                 <div className="p-4 border-t border-gray-800 space-y-2">
-                    {/* Note: Staff usually don't have access to general settings, but left here for layout symmetry */}
                     <button
                         onClick={() => navigate('/staff/settings')}
                         className={`w-full text-left p-4 rounded-xl flex items-center gap-4 text-xs font-bold uppercase tracking-widest transition-all ${isActive('/staff/settings') ? 'text-orange-500' : 'text-gray-500 hover:text-white'}`}
@@ -97,14 +136,14 @@ export default function StaffSidebar() {
 
             {/* Logout Modal */}
             {showLogoutModal && (
-                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-gray-900">
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-gray-900 font-sans">
                     <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl text-center">
                         <LogOut size={32} className="mx-auto mb-4 text-red-500" />
                         <h3 className="text-xl font-black uppercase tracking-tight mb-2">End Session?</h3>
-                        <p className="text-gray-500 mb-8 text-sm font-medium italic font-sans">Are you sure you want to log out of the staff portal?</p>
+                        <p className="text-gray-500 mb-8 text-sm font-medium italic">Are you sure you want to log out of the staff portal?</p>
                         <div className="flex gap-3">
                             <button onClick={() => setShowLogoutModal(false)} className="flex-1 py-4 bg-gray-100 font-black uppercase text-[10px] tracking-widest rounded-xl">Cancel</button>
-                            <button onClick={handleLogout} className="flex-1 py-4 bg-red-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-red-900/20">Logout</button>
+                            <button onClick={handleLogout} className="flex-1 py-4 bg-red-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg">Logout</button>
                         </div>
                     </div>
                 </div>

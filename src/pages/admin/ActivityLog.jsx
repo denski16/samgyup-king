@@ -2,8 +2,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from "../../supabaseClient";
 import AdminSidebar from "../../components/AdminSidebar";
 import {
-    Activity, Clock, ShoppingCart, Package,
-    UserCheck, Store, ShieldCheck
+    Activity,
+    Clock,
+    ShoppingCart,
+    Package,
+    UserCheck,
+    Store,
+    ShieldCheck,
+    Calendar,
+    RefreshCcw // <-- Fixed: Import added to resolve ReferenceError
 } from 'lucide-react';
 
 export default function ActivityLog() {
@@ -14,11 +21,11 @@ export default function ActivityLog() {
     useEffect(() => {
         fetchData();
 
-        // Optional Pro-Tip: Subscribe to real-time changes
+        // Real-time subscription to update the feed instantly
         const subscription = supabase
             .channel('activity_channel')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity_logs' }, payload => {
-                setLogs(current => [payload.new, ...current].slice(0, 50)); // Keep top 50
+                setLogs(current => [payload.new, ...current].slice(0, 50));
             })
             .subscribe();
 
@@ -27,12 +34,12 @@ export default function ActivityLog() {
 
     async function fetchData() {
         setLoading(true);
-        // 1. Fetch recent activity
+        // 1. Fetch recent activity (Last 100 entries)
         const { data: logData } = await supabase
             .from('activity_logs')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(50);
+            .limit(100);
 
         setLogs(logData || []);
 
@@ -40,7 +47,7 @@ export default function ActivityLog() {
         const { data: staffData } = await supabase
             .from('profiles')
             .select('*')
-            .eq('role', 'Staff')
+            .neq('role', 'client')
             .order('last_name', { ascending: true });
 
         setStaffProfiles(staffData || []);
@@ -53,47 +60,81 @@ export default function ActivityLog() {
         return <ShieldCheck size={16} className="text-orange-500" />;
     };
 
+    // Smart Date Formatter for PH Timezone
+    const formatLogDate = (dateString) => {
+        const date = new Date(dateString);
+        const now = new Date();
+
+        if (date.toDateString() === now.toDateString()) {
+            return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        if (date.toDateString() === yesterday.toDateString()) {
+            return `Yesterday, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        }
+
+        return date.toLocaleDateString('en-PH', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <AdminSidebar />
 
-            <main className="flex-1 p-8 overflow-y-auto">
-                <header className="mb-10">
-                    <h1 className="text-3xl font-black uppercase tracking-tight italic flex items-center gap-3">
-                        <Activity className="text-orange-600" size={32} /> System <span className="text-orange-600">Radar</span>
+            <main className="flex-1 p-4 pt-20 md:p-8 overflow-y-auto max-w-[100vw]">
+                <header className="mb-8 md:mb-10">
+                    <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight italic flex items-center gap-3 text-gray-900">
+                        <Activity className="text-orange-600" size={32} /> Activity <span className="text-orange-600">Logs</span>
                     </h1>
-                    <p className="text-gray-500 font-medium italic mt-1">Live monitoring of staff actions and branch status.</p>
+                    <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Live monitoring of staff actions and branch status.</p>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
 
                     {/* LEFT COLUMN: LIVE ACTIVITY FEED */}
-                    <div className="lg:col-span-2 bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[75vh]">
-                        <div className="p-8 border-b border-gray-100 bg-gray-50/50">
-                            <h2 className="text-xl font-black uppercase tracking-tight">Real-Time Log</h2>
+                    <div className="lg:col-span-2 bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[60vh] md:h-[75vh]">
+                        <div className="p-6 md:p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                            <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">Real-Time Log</h2>
+                            <span className="animate-pulse flex items-center gap-2 text-[10px] font-black text-green-600 uppercase">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div> Live
+                            </span>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 custom-scrollbar">
                             {loading && !logs.length ? (
-                                <p className="text-center py-10 text-gray-400 font-black uppercase tracking-widest animate-pulse">Scanning Network...</p>
+                                <div className="flex flex-col items-center justify-center h-full gap-4">
+                                    <RefreshCcw className="animate-spin text-orange-500" size={24} />
+                                    <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Scanning Network...</p>
+                                </div>
                             ) : logs.length === 0 ? (
-                                <p className="text-center py-10 text-gray-400 font-bold italic">No activity recorded today.</p>
+                                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                                    <Activity size={48} className="opacity-10 mb-4" />
+                                    <p className="font-bold italic">No activity recorded recently.</p>
+                                </div>
                             ) : logs.map((log) => (
-                                <div key={log.id} className="p-4 rounded-2xl bg-gray-50 border border-transparent hover:border-orange-200 transition-colors flex items-start gap-4 group">
-                                    <div className="mt-1 bg-white p-2 rounded-full shadow-sm border border-gray-100">
+                                <div key={log.id} className="p-4 rounded-xl md:rounded-2xl bg-gray-50 border border-transparent hover:border-orange-200 transition-all flex items-start gap-3 md:gap-4 group">
+                                    <div className="mt-1 bg-white p-2 rounded-full shadow-sm border border-gray-100 flex-shrink-0">
                                         {getIconForAction(log.action_type)}
                                     </div>
-                                    <div className="flex-1">
-                                        <div className="flex justify-between items-start mb-1">
-                                            <p className="font-black text-gray-900 uppercase text-sm tracking-tight">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 gap-1">
+                                            <p className="font-black text-gray-900 uppercase text-xs md:text-sm tracking-tight truncate">
                                                 {log.staff_name} <span className="text-gray-400 font-bold mx-1">@</span> {log.branch}
                                             </p>
-                                            <p className="text-[10px] text-gray-400 font-black flex items-center gap-1 uppercase">
+                                            <p className="text-[9px] md:text-[10px] text-gray-400 font-black flex items-center gap-1 uppercase whitespace-nowrap">
                                                 <Clock size={10} />
-                                                {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {formatLogDate(log.created_at)}
                                             </p>
                                         </div>
-                                        <p className="text-gray-600 text-xs font-medium">{log.details}</p>
+                                        <p className="text-gray-600 text-[11px] md:text-xs font-medium leading-relaxed">
+                                            {log.details}
+                                        </p>
                                     </div>
                                 </div>
                             ))}
@@ -101,8 +142,8 @@ export default function ActivityLog() {
                     </div>
 
                     {/* RIGHT COLUMN: STAFF STATUS */}
-                    <div className="lg:col-span-1 bg-gray-900 rounded-[2.5rem] shadow-2xl p-8 flex flex-col h-[75vh]">
-                        <h2 className="text-xl font-black uppercase tracking-tight text-white mb-6 flex items-center gap-2">
+                    <div className="lg:col-span-1 bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl p-6 md:p-8 flex flex-col h-[50vh] md:h-[75vh]">
+                        <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-white mb-6 flex items-center gap-2">
                             <UserCheck className="text-orange-500" size={20} /> Branch Rosters
                         </h2>
 
@@ -110,14 +151,14 @@ export default function ActivityLog() {
                             {staffProfiles.map(staff => (
                                 <div key={staff.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                                     <div className="flex justify-between items-center mb-2">
-                                        <p className="font-black text-white uppercase tracking-tight text-sm">
+                                        <p className="font-black text-white uppercase tracking-tight text-xs md:text-sm truncate mr-2">
                                             {staff.first_name} {staff.last_name}
                                         </p>
-                                        <span className={`w-2 h-2 rounded-full ${staff.status === 'Active' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-500'}`}></span>
+                                        <span className={`w-2 h-2 flex-shrink-0 rounded-full ${staff.status === 'Active' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-500'}`}></span>
                                     </div>
                                     <div className="flex flex-wrap gap-1 mt-2">
                                         {staff.branches?.map(b => (
-                                            <span key={b} className="text-[8px] bg-white/10 text-gray-300 px-2 py-1 rounded-md uppercase font-black tracking-widest flex items-center gap-1">
+                                            <span key={b} className="text-[7px] md:text-[8px] bg-white/10 text-gray-300 px-2 py-1 rounded-md uppercase font-black tracking-widest flex items-center gap-1">
                                                 <Store size={8} /> {b}
                                             </span>
                                         ))}

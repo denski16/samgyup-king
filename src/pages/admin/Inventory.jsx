@@ -134,7 +134,7 @@ export default function Inventory() {
                 {/* --- HEADER --- */}
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
                     <div>
-                        <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900">Inventory Control</h1>
+                        <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900">Inventory</h1>
                         <div className="flex items-center gap-2 md:gap-4 mt-1">
                             <p className="text-gray-500 font-bold tracking-widest text-[9px] md:text-[10px] uppercase">{activeTab} BRANCH</p>
                             {criticalCount > 0 && (

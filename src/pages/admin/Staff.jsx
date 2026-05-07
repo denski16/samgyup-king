@@ -201,7 +201,7 @@ export default function Staff() {
                 <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-10 gap-4">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900 italic">
-                            Team <span className="text-orange-600 font-black">King</span> Directory
+                            staff <span className="text-orange-600 font-black">management</span>
                         </h1>
                         <p className="text-sm md:text-base text-gray-500 font-medium italic">Manage branch assignments and portal access.</p>
                     </div>

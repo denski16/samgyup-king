@@ -7,18 +7,19 @@ import Login from './pages/auth/Login';
 
 // --- ADMIN PAGES ---
 import AdminDashboard from './pages/admin/Dashboard';
-import ActivityLog from './pages/admin/ActivityLog'; // <-- 1. NEW IMPORT HERE
+import ActivityLog from './pages/admin/ActivityLog';
 import Inventory from './pages/admin/Inventory';
 import AdminSales from './pages/admin/Sales';
 import SalesReport from './pages/admin/SalesReport';
 import StaffManagement from './pages/admin/Staff';
-import Settings from './pages/admin/Settings';
+import AdminSettings from './pages/admin/Settings'; // Renamed for clarity
 
 // --- STAFF PAGES ---
 import StaffDashboard from './pages/staff/Dashboard';
 import StaffSales from './pages/staff/Sales';
 import StaffInventory from './pages/staff/Inventory';
 import StaffSalesReport from './pages/staff/SalesReport';
+import StaffSettings from './pages/staff/Settings'; // <-- 1. NEW IMPORT HERE
 
 export default function App() {
   return (
@@ -33,7 +34,6 @@ export default function App() {
           path="/admin/dashboard"
           element={<ProtectedRoute role="Admin"><AdminDashboard /></ProtectedRoute>}
         />
-        {/* --- 2. NEW ROUTE HERE --- */}
         <Route
           path="/admin/activity"
           element={<ProtectedRoute role="Admin"><ActivityLog /></ProtectedRoute>}
@@ -56,7 +56,7 @@ export default function App() {
         />
         <Route
           path="/admin/settings"
-          element={<ProtectedRoute role="Admin"><Settings /></ProtectedRoute>}
+          element={<ProtectedRoute role="Admin"><AdminSettings /></ProtectedRoute>}
         />
 
         {/* --- STAFF PROTECTED ROUTES --- */}
@@ -75,6 +75,11 @@ export default function App() {
         <Route
           path="/staff/reports"
           element={<ProtectedRoute role="Staff"><StaffSalesReport /></ProtectedRoute>}
+        />
+        {/* --- 2. NEW STAFF SETTINGS ROUTE HERE --- */}
+        <Route
+          path="/staff/settings"
+          element={<ProtectedRoute role="Staff"><StaffSettings /></ProtectedRoute>}
         />
 
         {/* Catch-all for undefined routes */}
