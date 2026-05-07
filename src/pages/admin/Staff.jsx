@@ -3,7 +3,8 @@ import { supabase } from "../../supabaseClient";
 import AdminSidebar from "../../components/AdminSidebar";
 import {
     Users, UserPlus, Pencil, Trash2, X,
-    Lock, Mail, Check, ShieldCheck, AlertCircle, Phone
+    Lock, Mail, Check, ShieldCheck, AlertCircle, Phone,
+    PartyPopper, ArrowRight
 } from 'lucide-react';
 import bcrypt from 'bcryptjs';
 
@@ -13,11 +14,11 @@ export default function Staff() {
     const [staff, setStaff] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Modal Visibility States
     const [showModal, setShowModal] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false); // Modal for success
 
     const [isEditing, setIsEditing] = useState(false);
     const [currentId, setCurrentId] = useState(null);
@@ -28,14 +29,13 @@ export default function Staff() {
         last_name: '',
         role: 'Staff',
         branches: [],
-        contact_number: '', // The number is back
+        contact_number: '',
         status: 'Active',
         email: '',
         password: ''
     };
     const [formData, setFormData] = useState(initialForm);
 
-    // --- PASSWORD STRENGTH CHECKER ---
     const validatePassword = (pass) => {
         return {
             length: pass.length >= 8,
@@ -52,8 +52,13 @@ export default function Staff() {
 
     async function fetchStaff() {
         setLoading(true);
-        const { data } = await supabase.from('staff').select('*').order('last_name', { ascending: true });
-        setStaff(data || []);
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .neq('role', 'client')
+            .order('last_name', { ascending: true });
+
+        if (!error) setStaff(data || []);
         setLoading(false);
     }
 
@@ -87,7 +92,7 @@ export default function Staff() {
     };
 
     const confirmDelete = async () => {
-        const { error } = await supabase.from('staff').delete().eq('id', currentId);
+        const { error } = await supabase.from('profiles').delete().eq('id', currentId);
         if (error) alert(error.message);
         setShowDeleteModal(false);
         fetchStaff();
@@ -111,58 +116,75 @@ export default function Staff() {
 
         setLoading(true);
         try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("No active session found.");
-
+            const { data: { user: adminUser } } = await supabase.auth.getUser();
             const { data: manager } = await supabase
-                .from('staff')
+                .from('profiles')
                 .select('password')
-                .eq('email', user.email)
-                .maybeSingle();
-
-            if (!manager) throw new Error("Manager profile not found in Staff table.");
+                .eq('id', adminUser.id)
+                .single();
 
             const isAuthorized = await bcrypt.compare(managerPassword, manager.password);
-
             if (!isAuthorized) {
                 setLoading(false);
                 setManagerPassword('');
                 setShowAuthModal(false);
-                setShowErrorModal(true); // Custom error modal triggers here
+                setShowErrorModal(true);
                 return;
             }
 
-            // Duplicate Email Check
-            const { data: existingStaff } = await supabase
-                .from('staff')
-                .select('id, email')
-                .eq('email', formData.email)
-                .maybeSingle();
+            if (isEditing) {
+                let updateData = {
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    branches: formData.branches,
+                    contact_number: formData.contact_number,
+                    status: formData.status
+                };
 
-            if (existingStaff && (!isEditing || existingStaff.id !== currentId)) {
-                alert(`The email "${formData.email}" is already used by another staff.`);
-                setLoading(false);
+                if (formData.password) {
+                    const salt = await bcrypt.genSalt(10);
+                    updateData.password = await bcrypt.hash(formData.password, salt);
+                }
+
+                const { error } = await supabase.from('profiles').update(updateData).eq('id', currentId);
+                if (error) throw error;
+
                 setShowAuthModal(false);
-                return;
-            }
+                setShowModal(false);
+                fetchStaff();
 
-            let submissionData = { ...formData };
-            if (formData.password) {
+            } else {
+                // --- REGISTRATION LOGIC ---
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: formData.email,
+                    password: formData.password,
+                });
+
+                if (authError) throw authError;
+
                 const salt = await bcrypt.genSalt(10);
-                submissionData.password = await bcrypt.hash(formData.password, salt);
-            } else if (isEditing) {
-                delete submissionData.password;
+                const hashedPassword = await bcrypt.hash(formData.password, salt);
+
+                const { error: profileError } = await supabase.from('profiles').insert([{
+                    id: authData.user.id,
+                    email: formData.email,
+                    first_name: formData.first_name,
+                    last_name: formData.last_name,
+                    role: 'Staff',
+                    branches: formData.branches,
+                    contact_number: formData.contact_number,
+                    status: 'Active',
+                    password: hashedPassword
+                }]);
+
+                if (profileError) throw profileError;
+
+                // Success Actions: Close everything and show Success Modal
+                setShowAuthModal(false);
+                setShowModal(false);
+                setShowSuccessModal(true);
+                fetchStaff(); // Refresh table in background
             }
-
-            const { error } = isEditing
-                ? await supabase.from('staff').update(submissionData).eq('id', currentId)
-                : await supabase.from('staff').insert([submissionData]);
-
-            if (error) throw error;
-
-            setShowAuthModal(false);
-            setShowModal(false);
-            fetchStaff();
         } catch (error) {
             alert(error.message);
         } finally {
@@ -176,11 +198,13 @@ export default function Staff() {
             <main className="flex-1 p-8 overflow-x-auto">
                 <header className="flex justify-between items-start mb-10">
                     <div>
-                        <h1 className="text-3xl font-black uppercase tracking-tight text-gray-900">Staff Management</h1>
-                        <p className="text-gray-500 font-medium italic">Manage multiple branch assignments and login access.</p>
+                        <h1 className="text-3xl font-black uppercase tracking-tight text-gray-900 italic">
+                            Team <span className="text-orange-600 font-black">King</span> Directory
+                        </h1>
+                        <p className="text-gray-500 font-medium italic">Manage branch assignments and portal access.</p>
                     </div>
                     <button onClick={openAddModal} className="bg-orange-600 hover:bg-orange-700 text-white px-6 py-4 rounded-2xl font-black uppercase text-xs tracking-widest flex items-center gap-2 shadow-xl shadow-orange-900/20 transition-all active:scale-95">
-                        <UserPlus size={18} /> Add Staff Member
+                        <UserPlus size={18} /> Register Staff
                     </button>
                 </header>
 
@@ -189,6 +213,7 @@ export default function Staff() {
                         <thead className="bg-gray-900 text-white text-[10px] uppercase tracking-[0.2em]">
                             <tr>
                                 <th className="p-6">Full Name</th>
+                                <th className="p-6">Role</th>
                                 <th className="p-6">Branches</th>
                                 <th className="p-6">Email / Login</th>
                                 <th className="p-6 text-center">Status</th>
@@ -196,13 +221,16 @@ export default function Staff() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100 text-sm">
-                            {loading && !staff.length ? (
-                                <tr><td colSpan="5" className="p-20 text-center text-gray-400 font-black animate-pulse uppercase tracking-[0.3em]">Loading Team Data...</td></tr>
-                            ) : staff.map((member) => (
+                            {staff.map((member) => (
                                 <tr key={member.id} className="hover:bg-orange-50/20 transition-colors group">
                                     <td className="p-6">
                                         <p className="font-black text-gray-900 uppercase tracking-tight">{member.first_name} {member.last_name}</p>
                                         <p className="text-[10px] font-bold text-gray-400 uppercase">{member.contact_number || 'No Contact'}</p>
+                                    </td>
+                                    <td className="p-6">
+                                        <span className={`text-[10px] font-black uppercase px-2 py-1 rounded border ${member.role?.toLowerCase() === 'admin' ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-gray-200 text-gray-500'}`}>
+                                            {member.role}
+                                        </span>
                                     </td>
                                     <td className="p-6">
                                         <div className="flex flex-wrap gap-1">
@@ -211,11 +239,7 @@ export default function Staff() {
                                             ))}
                                         </div>
                                     </td>
-                                    <td className="p-6 text-gray-500 font-bold">
-                                        <div className="flex items-center gap-2">
-                                            <Mail size={14} className="text-orange-500" /> {member.email || 'No Access'}
-                                        </div>
-                                    </td>
+                                    <td className="p-6 text-gray-500 font-bold">{member.email}</td>
                                     <td className="p-6 text-center">
                                         <span className={`px-3 py-1 rounded-full font-black text-[9px] uppercase tracking-wider ${member.status === 'Active' ? 'bg-green-500 text-white' : 'bg-gray-400 text-white'}`}>
                                             {member.status}
@@ -234,108 +258,96 @@ export default function Staff() {
                 </div>
             </main>
 
-            {/* --- MAIN STAFF FORM MODAL --- */}
+            {/* --- REGISTRATION SUCCESS MODAL --- */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center bg-gray-950/50 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-[3rem] p-12 w-full max-w-sm shadow-2xl text-center border border-gray-100 animate-in zoom-in duration-300">
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <Check size={40} />
+                        </div>
+                        <h2 className="text-2xl font-black uppercase tracking-tight mb-2 text-gray-900">Staff Added!</h2>
+                        <p className="text-gray-500 text-xs mb-8 font-bold italic">
+                            The new staff member has been registered successfully.
+                        </p>
+                        <button
+                            onClick={() => setShowSuccessModal(false)}
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest py-4 rounded-2xl shadow-lg transition-all active:scale-95"
+                        >
+                            Got it
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* --- FORM MODAL --- */}
             {showModal && (
-                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 text-gray-900">
+                <div className="fixed inset-0 z-[110] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4">
                     <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-xl shadow-2xl overflow-y-auto max-h-[95vh]">
                         <div className="flex justify-between items-center mb-8">
                             <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
-                                <Users className="text-orange-600" /> {isEditing ? 'Edit Profile' : 'New Staff'}
+                                <Users className="text-orange-600" /> {isEditing ? 'Update User' : 'New Registration'}
                             </h2>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-900"><X size={24} /></button>
+                            <button onClick={() => setShowModal(false)}><X size={24} /></button>
                         </div>
 
                         <form onSubmit={handlePreSubmit} className="space-y-8">
-                            {/* Personal Info */}
-                            <section className="space-y-4">
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-orange-600 border-b border-orange-100 pb-2">Personal Information</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input required placeholder="First Name" className="w-full bg-gray-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold border border-transparent" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} />
-                                    <input required placeholder="Last Name" className="w-full bg-gray-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold border border-transparent" value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} />
-                                </div>
-                                <div className="relative">
-                                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
-                                    <input placeholder="Contact Number" className="w-full bg-gray-50 pl-12 p-4 rounded-2xl outline-none font-bold" value={formData.contact_number} onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })} />
-                                </div>
-                            </section>
+                            <div className="grid grid-cols-2 gap-4">
+                                <input required placeholder="First Name" className="w-full bg-gray-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold border border-transparent" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} />
+                                <input required placeholder="Last Name" className="w-full bg-gray-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold border border-transparent" value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} />
+                            </div>
+                            <input placeholder="Contact Number" className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold" value={formData.contact_number} onChange={(e) => setFormData({ ...formData, contact_number: e.target.value })} />
 
-                            {/* Branch Selection */}
-                            <section className="space-y-4">
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-orange-600 border-b border-orange-100 pb-2">Branch Assignments</h3>
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-orange-600">Branch Assignments</h3>
                                 <div className="grid grid-cols-2 gap-2">
                                     {branchOptions.map(branch => (
                                         <button key={branch} type="button" onClick={() => toggleBranch(branch)} className={`p-3 rounded-xl border-2 flex items-center justify-between transition-all ${formData.branches.includes(branch) ? 'bg-orange-50 border-orange-500 text-orange-700 font-black' : 'bg-white border-gray-100 text-gray-400 font-bold'}`}>
-                                            <span className="text-[10px] uppercase tracking-widest">{branch}</span>
+                                            <span className="text-[10px] uppercase">{branch}</span>
                                             {formData.branches.includes(branch) && <Check size={14} />}
                                         </button>
                                     ))}
                                 </div>
-                            </section>
+                            </div>
 
-                            <section className="space-y-4">
-                                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-orange-600 border-b border-orange-100 pb-2">Staff Login Access</h3>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <input required type="email" placeholder="Email Address" className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                                    <input type="password" placeholder={isEditing ? "New Password" : "Password"} className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-                                </div>
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-black uppercase tracking-widest text-orange-600">Login Access</h3>
+                                <input required type="email" placeholder="Email" className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                                <input type="password" placeholder={isEditing ? "New Password (Optional)" : "Password"} className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-bold" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
 
-                                {/* Password Requirements Checklist */}
                                 {(formData.password.length > 0 || !isEditing) && (
-                                    <div className="grid grid-cols-2 gap-y-2 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                                        <Requirement label="8+ Characters" met={strength.length} />
-                                        <Requirement label="1 Uppercase" met={strength.upper} />
-                                        <Requirement label="1 Number" met={strength.number} />
-                                        <Requirement label="1 Symbol (@$!%*?&)" met={strength.special} />
+                                    <div className="grid grid-cols-2 gap-2 p-4 bg-gray-50 rounded-2xl">
+                                        <Requirement label="8+ Chars" met={strength.length} />
+                                        <Requirement label="Uppercase" met={strength.upper} />
+                                        <Requirement label="Number" met={strength.number} />
+                                        <Requirement label="Special" met={strength.special} />
                                     </div>
                                 )}
-                            </section>
+                            </div>
 
                             <button type="submit" className="w-full p-5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl transition-all active:scale-95">
-                                {isEditing ? 'Review Changes' : 'Complete Registration'}
+                                {isEditing ? 'Update Profile' : 'Register Member'}
                             </button>
                         </form>
                     </div>
                 </div>
             )}
 
-            {/* --- POPUP AUTHORIZATION MODAL --- */}
+            {/* --- AUTHORIZATION MODAL --- */}
             {showAuthModal && (
                 <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 text-white">
-                    <div className="bg-gray-900 rounded-[2.5rem] p-10 w-full max-w-sm shadow-2xl border border-white/10 text-center animate-in zoom-in duration-200">
-                        <div className="w-16 h-16 bg-orange-600/20 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <ShieldCheck size={32} />
-                        </div>
-                        <h2 className="text-xl font-black uppercase tracking-tight mb-2 text-white">Manager Approval</h2>
-                        <p className="text-gray-400 text-sm mb-8">Enter your login password to authorize this database change.</p>
-
+                    <div className="bg-gray-900 rounded-[2.5rem] p-10 w-full max-w-sm border border-white/10 text-center">
+                        <ShieldCheck size={48} className="mx-auto mb-6 text-orange-500" />
+                        <h2 className="text-xl font-black uppercase tracking-tight text-white mb-2">Manager Approval</h2>
+                        <p className="text-gray-400 text-sm mb-8 italic">Please verify your password to authorize this action.</p>
                         <form onSubmit={handleFinalSubmit} className="space-y-4">
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
-                                <input required autoFocus type="password" placeholder="Manager Password" className="w-full bg-white/5 border border-white/10 pl-12 p-4 rounded-2xl outline-none font-bold text-white focus:border-orange-500 transition-all placeholder:text-gray-600" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} />
-                            </div>
+                            <input required autoFocus type="password" placeholder="Your Password" className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none font-bold text-white focus:border-orange-500" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} />
                             <div className="flex gap-3">
-                                <button type="button" onClick={() => setShowAuthModal(false)} className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-xl font-bold uppercase text-[10px] tracking-widest transition-colors text-white">Cancel</button>
-                                <button type="submit" disabled={loading} className="flex-1 py-4 bg-orange-600 hover:bg-orange-700 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-orange-900/20 disabled:bg-gray-700 text-white">
-                                    {loading ? 'Verifying...' : 'Authorize'}
+                                <button type="button" onClick={() => setShowAuthModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl font-bold uppercase text-[10px] text-white">Cancel</button>
+                                <button type="submit" disabled={loading} className="flex-1 py-4 bg-orange-600 rounded-xl font-black uppercase text-[10px] text-white">
+                                    {loading ? '...' : 'Verify'}
                                 </button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
-
-            {/* --- ERROR MODAL (Access Denied) --- */}
-            {showErrorModal && (
-                <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-gray-900">
-                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl text-center border-t-8 border-red-500 animate-in zoom-in duration-200">
-                        <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle size={32} />
-                        </div>
-                        <h3 className="text-xl font-black uppercase tracking-tight mb-2 text-red-600">Access Denied</h3>
-                        <p className="text-gray-500 mb-6 text-sm font-bold italic">The manager password you entered is incorrect. This change has been blocked for security.</p>
-                        <button onClick={() => { setShowErrorModal(false); setShowAuthModal(true); }} className="w-full py-4 bg-gray-900 text-white font-black uppercase text-xs tracking-widest rounded-xl hover:bg-gray-800 transition-all">
-                            Try Again
-                        </button>
                     </div>
                 </div>
             )}
@@ -346,11 +358,25 @@ export default function Staff() {
                     <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
                         <Trash2 size={32} className="mx-auto mb-4 text-red-500" />
                         <h3 className="text-xl font-black mb-2 text-gray-900">Remove Record?</h3>
-                        <p className="text-gray-500 mb-6 text-sm font-medium italic">This will permanently remove the staff member from the system.</p>
+                        <p className="text-gray-500 mb-6 text-sm font-medium italic">This will permanently remove the staff member.</p>
                         <div className="flex gap-3">
                             <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-3 bg-gray-100 font-bold rounded-xl text-gray-900">Cancel</button>
                             <button onClick={confirmDelete} className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl">Yes, Remove</button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- ERROR MODAL --- */}
+            {showErrorModal && (
+                <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/60 p-4 text-gray-900">
+                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl text-center border-t-8 border-red-500">
+                        <AlertCircle size={32} className="mx-auto mb-4 text-red-600" />
+                        <h3 className="text-xl font-black uppercase tracking-tight mb-2 text-red-600">Access Denied</h3>
+                        <p className="text-gray-500 mb-6 text-sm font-bold italic">Incorrect manager password.</p>
+                        <button onClick={() => { setShowErrorModal(false); setShowAuthModal(true); }} className="w-full py-4 bg-gray-900 text-white font-black uppercase text-xs tracking-widest rounded-xl">
+                            Try Again
+                        </button>
                     </div>
                 </div>
             )}
@@ -360,11 +386,8 @@ export default function Staff() {
 
 function Requirement({ label, met }) {
     return (
-        <div className={`flex items-center gap-2 text-[9px] font-black uppercase tracking-tighter ${met ? 'text-green-600' : 'text-gray-300'}`}>
-            <div className={`w-3 h-3 rounded-full flex items-center justify-center ${met ? 'bg-green-100' : 'bg-gray-100'}`}>
-                {met && <Check size={8} strokeWidth={4} />}
-            </div>
-            {label}
+        <div className={`flex items-center gap-2 text-[8px] font-black uppercase ${met ? 'text-green-600' : 'text-gray-300'}`}>
+            <Check size={10} className={met ? 'opacity-100' : 'opacity-20'} /> {label}
         </div>
     );
 }
