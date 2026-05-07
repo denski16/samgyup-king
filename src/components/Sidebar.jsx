@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { supabase } from '../supabaseClient'; // 1. Added Supabase import
 import {
     LayoutDashboard,
     Package,
-    ShoppingCart, // For active Sales entry
-    FileBarChart, // For the Sales Report
+    ShoppingCart,
+    FileBarChart,
     Users,
     Settings,
     LogOut
@@ -18,7 +19,6 @@ export default function Sidebar() {
 
     const isActive = (path) => location.pathname === path;
 
-    // Navigation items with the distinct Sales and Reports routes
     const mainNavItems = [
         { name: 'DASHBOARD', path: '/dashboard', icon: LayoutDashboard },
         { name: 'INVENTORY', path: '/inventory', icon: Package },
@@ -27,15 +27,28 @@ export default function Sidebar() {
         { name: 'STAFF', path: '/staff', icon: Users },
     ];
 
-    const handleLogout = () => {
-        // You can add supabase.auth.signOut() here if needed
-        navigate('/');
+    // --- UPDATED LOGOUT LOGIC ---
+    const handleLogout = async () => {
+        try {
+            // 2. This actually kills the session in Supabase
+            const { error } = await supabase.auth.signOut();
+
+            if (error) throw error;
+
+            // 3. Clear modal and force redirect to login
+            setShowLogoutModal(false);
+            navigate('/login', { replace: true });
+
+            // Optional: Full page refresh to clear any cached data
+            window.location.reload();
+        } catch (error) {
+            alert("Error logging out: " + error.message);
+        }
     };
 
     return (
         <>
             <aside className="w-64 bg-gray-900 text-white hidden md:flex flex-col sticky top-0 h-screen shadow-2xl">
-
                 {/* --- LOGO SECTION --- */}
                 <div className="p-6 border-b border-gray-800 flex flex-col items-center gap-3">
                     <div className="w-20 h-20 rounded-full bg-white p-2 overflow-hidden flex items-center justify-center shadow-inner">
@@ -70,7 +83,7 @@ export default function Sidebar() {
                     })}
                 </nav>
 
-                {/* --- BOTTOM SECTION (SETTINGS & LOGOUT) --- */}
+                {/* --- BOTTOM SECTION --- */}
                 <div className="p-4 border-t border-gray-800 space-y-2">
                     <button
                         onClick={() => navigate('/settings')}
@@ -101,21 +114,21 @@ export default function Sidebar() {
                             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
                                 <LogOut size={32} />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Confirm Logout</h3>
-                            <p className="text-gray-500 mb-6 text-sm">
-                                Are you sure you want to log out of the Samgyup King management system?
+                            <h3 className="text-xl font-bold text-gray-900 mb-2 font-black uppercase">Confirm Logout</h3>
+                            <p className="text-gray-500 mb-6 text-sm italic font-medium">
+                                Are you sure you want to end your session? You will need to login again to access the dashboard.
                             </p>
 
                             <div className="flex w-full gap-3">
                                 <button
                                     onClick={() => setShowLogoutModal(false)}
-                                    className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-colors"
+                                    className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-colors uppercase text-xs tracking-widest"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleLogout}
-                                    className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl transition-colors shadow-lg shadow-red-900/20"
+                                    className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-2xl transition-colors shadow-lg shadow-red-900/20 uppercase text-xs tracking-widest"
                                 >
                                     Yes, Logout
                                 </button>
