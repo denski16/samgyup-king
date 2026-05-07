@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import {
@@ -10,7 +10,9 @@ import {
     Settings,
     LogOut,
     ShieldCheck,
-    Activity // <-- THIS WAS MISSING!
+    Activity,
+    Menu,
+    X
 } from 'lucide-react';
 import logoImg from '../assets/LOGO NO BG.png';
 
@@ -18,8 +20,13 @@ export default function AdminSidebar() {
     const navigate = useNavigate();
     const location = useLocation();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const isActive = (path) => location.pathname === path;
+
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [location.pathname]);
 
     const navItems = [
         { name: 'DASHBOARD', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -42,20 +49,56 @@ export default function AdminSidebar() {
 
     return (
         <>
-            <aside className="w-64 bg-gray-900 text-white hidden md:flex flex-col sticky top-0 h-screen shadow-2xl border-r border-white/5">
-                <div className="p-8 border-b border-gray-800 flex flex-col items-center gap-4">
-                    <div className="w-20 h-20 rounded-full bg-white p-2 shadow-2xl">
-                        <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
-                    </div>
-                    <div className="text-center">
-                        <span className="block text-xl font-black tracking-tighter text-orange-500 uppercase leading-none">Samgyup King</span>
-                        <span className="text-[9px] font-black text-gray-500 tracking-[0.3em] uppercase flex items-center justify-center gap-1 mt-2">
-                            <ShieldCheck size={10} className="text-green-500" /> Admin Suite
-                        </span>
+            {/* --- MOVED: Top-Left Mobile Menu Button --- */}
+            <button
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="md:hidden fixed top-5 left-5 z-[130] p-3 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-md hover:text-orange-600 hover:border-orange-200 active:scale-95 transition-all"
+            >
+                <Menu size={24} />
+            </button>
+
+            {/* Mobile Backdrop Overlay */}
+            {isMobileMenuOpen && (
+                <div
+                    className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[140] transition-opacity"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                />
+            )}
+
+            {/* SIDEBAR */}
+            <aside className={`fixed inset-y-0 left-0 z-[150] w-64 bg-gray-900 text-white flex flex-col h-screen shadow-2xl border-r border-white/5 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+
+                <div className="p-8 border-b border-gray-800 relative">
+                    {/* Mobile Close Button inside Sidebar */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="md:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-white transition-colors rounded-lg bg-white/5 z-10"
+                    >
+                        <X size={16} />
+                    </button>
+
+                    {/* CLICKABLE BRANDING HEADER */}
+                    <div
+                        onClick={() => {
+                            navigate('/admin/dashboard');
+                            setIsMobileMenuOpen(false);
+                        }}
+                        className="flex flex-col items-center gap-4 cursor-pointer group"
+                        title="Go to Dashboard"
+                    >
+                        <div className="w-20 h-20 rounded-full bg-white p-2 shadow-2xl transition-transform duration-300 group-hover:scale-105 group-hover:shadow-orange-900/50">
+                            <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
+                        </div>
+                        <div className="text-center transition-opacity duration-300 group-hover:opacity-80">
+                            <span className="block text-xl font-black tracking-tighter text-orange-500 uppercase leading-none">Samgyup King</span>
+                            <span className="text-[9px] font-black text-gray-500 tracking-[0.3em] uppercase flex items-center justify-center gap-1 mt-2">
+                                <ShieldCheck size={10} className="text-green-500" /> Admin Suite
+                            </span>
+                        </div>
                     </div>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2 mt-6">
+                <nav className="flex-1 p-4 space-y-2 mt-6 overflow-y-auto custom-scrollbar">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
