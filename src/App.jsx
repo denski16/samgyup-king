@@ -1,48 +1,31 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
-import ProtectedRoute from './components/ProtectedRoute';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Inventory from './pages/Inventory';
-import Sales from './pages/Sales';
-import SalesReport from './pages/SalesReport';
-import Staff from './pages/Staff';
+// --- AUTH & CLIENT ---
+import Landing from './pages/client/Landing';
+import Login from './pages/auth/Login';
+
+// --- ADMIN PAGES ---
+import Dashboard from './pages/admin/Dashboard';
+import Inventory from './pages/admin/Inventory';
+import Sales from './pages/admin/Sales';        // Updated path
+import SalesReport from './pages/admin/SalesReport';
+import Staff from './pages/admin/Staff';
+import Settings from './pages/admin/Settings';
 
 export default function App() {
   return (
-    <main>
-      <Routes>
-        {/* Auth / Entry */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+    <Routes>
+      {/* Public */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
 
-        {/* Main Management Pages (Protected) */}
-        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+      {/* Admin Protected Routes */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+      <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
+      <Route path="/reports" element={<ProtectedRoute><SalesReport /></ProtectedRoute>} />
+      <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
-        {/* Sales & POS (Protected) */}
-        <Route path="/sales" element={<ProtectedRoute><Sales /></ProtectedRoute>} />
-
-        {/* Reports (Path must match Sidebar: /reports) (Protected) */}
-        <Route path="/reports" element={<ProtectedRoute><SalesReport /></ProtectedRoute>} />
-
-        {/* Team Management (Protected) */}
-        <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
-
-        {/* Settings Placeholder (Protected) */}
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <div className="p-8 text-gray-900">
-                <h1>Settings Page Coming Soon</h1>
-              </div>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Catch-all for undefined routes */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </main>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
