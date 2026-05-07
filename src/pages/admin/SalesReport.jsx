@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import Sidebar from '../components/Sidebar';
+import { supabase } from "../../supabaseClient";
+import AdminSidebar from "../../components/AdminSidebar";
 import {
     FileBarChart, TrendingUp, Package, Calendar,
     RefreshCcw, Banknote, ArrowUpRight, Download, FileText, Filter
@@ -112,7 +112,7 @@ export default function SalesReport() {
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900">
-            <Sidebar />
+            <AdminSidebar />
 
             <main className="flex-1 p-8 overflow-x-auto">
                 <header className="flex justify-between items-start mb-8">

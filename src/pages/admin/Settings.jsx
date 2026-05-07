@@ -1,9 +1,10 @@
-import Sidebar from '../components/Sidebar';
+import { supabase } from "../../supabaseClient";
+import AdminSidebar from "../../components/AdminSidebar";
 
 export default function Settings() {
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-            <Sidebar />
+            <AdminSidebar />
             <main className="flex-1 p-8">
                 <header className="mb-10">
                     <h1 className="text-3xl font-black uppercase tracking-tight">System Settings</h1>

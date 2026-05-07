@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import Sidebar from '../components/Sidebar';
+import { supabase } from "../../supabaseClient";
+import AdminSidebar from "../../components/AdminSidebar";
 import {
     Users, UserPlus, Pencil, Trash2, X,
     Lock, Mail, Check, ShieldCheck, AlertCircle, Phone
@@ -172,7 +172,7 @@ export default function Staff() {
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-            <Sidebar />
+            <AdminSidebar />
             <main className="flex-1 p-8 overflow-x-auto">
                 <header className="flex justify-between items-start mb-10">
                     <div>

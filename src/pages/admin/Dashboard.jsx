@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import Sidebar from '../components/Sidebar';
+import { supabase } from "../../supabaseClient";
+// --- FIXED IMPORT ---
+import AdminSidebar from "../../components/AdminSidebar";
 import {
     TrendingUp,
     ShoppingBag,
     Package,
     ArrowUpRight,
     RefreshCcw,
-    Clock // Replaced Calendar icon for a more 'time-based' feel
+    Clock
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -64,7 +65,6 @@ export default function Dashboard() {
 
             setTopProducts(sortedProducts);
 
-            // Chart Logic
             const bucketCount = 7;
             const totalDuration = now.getTime() - startDate.getTime();
             const bucketSize = totalDuration / bucketCount;
@@ -89,10 +89,10 @@ export default function Dashboard() {
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
-            <Sidebar />
+            {/* --- FIXED COMPONENT TAG --- */}
+            <AdminSidebar />
 
             <main className="flex-1 p-8 overflow-y-auto">
-                {/* --- UPDATED HEADER WITH TABS --- */}
                 <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
                     <div>
                         <h1 className="text-3xl font-black uppercase tracking-tight">Executive Dashboard</h1>
@@ -100,15 +100,14 @@ export default function Dashboard() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        {/* New Tab Switcher instead of Dropdown */}
                         <div className="flex gap-1 bg-gray-200/60 p-1.5 rounded-2xl shadow-inner">
                             {filters.map((f) => (
                                 <button
                                     key={f}
                                     onClick={() => setFilter(f)}
                                     className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${filter === f
-                                            ? 'bg-white text-orange-600 shadow-md'
-                                            : 'text-gray-500 hover:text-gray-900'
+                                        ? 'bg-white text-orange-600 shadow-md'
+                                        : 'text-gray-500 hover:text-gray-900'
                                         }`}
                                 >
                                     {f}
@@ -125,7 +124,6 @@ export default function Dashboard() {
                     </div>
                 </header>
 
-                {/* --- STAT CARDS --- */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
                     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100 relative overflow-hidden group">
                         <div className="absolute top-0 right-0 p-6 text-orange-50 group-hover:text-orange-100 transition-colors">
@@ -157,7 +155,6 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* --- ANALYTICS SECTION --- */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="bg-gray-900 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
                         <div className="flex justify-between items-center mb-10 relative z-10">

@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import Sidebar from '../components/Sidebar';
-import { ShoppingCart, ArrowRight, CheckCircle, AlertCircle, Search, AlertTriangle } from 'lucide-react';
+import { supabase } from "../../supabaseClient";
+import AdminSidebar from "../../components/AdminSidebar";
+import {
+    ShoppingCart,
+    ArrowRight,
+    CheckCircle,
+    AlertTriangle
+} from 'lucide-react';
 
 export default function Sales() {
-    const branches = ['SUBIC', 'MINIMART', 'CASTILLEJOS', 'KSK VARIETY'];
+    // UPDATED: Only Subic and Castillejos to match your new landing page
+    const branches = ['SUBIC', 'CASTILLEJOS'];
     const [activeBranch, setActiveBranch] = useState('SUBIC');
     const [inventory, setInventory] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -67,9 +73,11 @@ export default function Sales() {
     }
 
     return (
-        <div className="flex min-h-screen bg-gray-50 text-gray-900">
-            <Sidebar />
-            <main className="flex-1 p-8">
+        <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
+            {/* FIXED: Using AdminSidebar tag to match the import */}
+            <AdminSidebar />
+
+            <main className="flex-1 p-8 overflow-y-auto">
                 <header className="mb-8">
                     <h1 className="text-3xl font-black uppercase tracking-tight">Daily Sales Entry</h1>
                     <p className="text-gray-500 font-medium italic">Record sales to auto-deduct from {activeBranch} inventory.</p>
@@ -79,32 +87,30 @@ export default function Sales() {
                 <div className="flex gap-2 mb-8 bg-gray-200/50 p-1.5 rounded-2xl w-fit">
                     {branches.map((br) => (
                         <button key={br} onClick={() => setActiveBranch(br)}
-                            className={`px-6 py-2.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${activeBranch === br ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500'}`}>
+                            className={`px-8 py-3 rounded-xl text-[10px] font-black tracking-[0.2em] transition-all ${activeBranch === br ? 'bg-white text-orange-600 shadow-md' : 'text-gray-500 hover:text-gray-900'}`}>
                             {br}
                         </button>
                     ))}
                 </div>
 
-                {/* --- GRID LAYOUT UPDATE --- */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-                    {/* LEFT: New Transaction (WIDER: 2/3) */}
+                    {/* LEFT: New Transaction */}
                     <div className="lg:col-span-2 bg-white rounded-[2.5rem] p-10 shadow-sm border border-gray-100 h-fit">
-                        <h2 className="text-xl font-black uppercase mb-6 flex items-center gap-2">
-                            <ShoppingCart className="text-orange-500" /> New Transaction
+                        <h2 className="text-xl font-black uppercase mb-8 flex items-center gap-3">
+                            <ShoppingCart className="text-orange-500" size={24} /> New Transaction
                         </h2>
 
                         {successMsg && (
-                            <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-2xl border border-green-100 flex items-center gap-2 font-bold text-sm animate-bounce">
-                                <CheckCircle size={18} /> {successMsg}
+                            <div className="mb-8 p-5 bg-green-50 text-green-700 rounded-3xl border border-green-100 flex items-center gap-3 font-black text-xs uppercase tracking-tight animate-in fade-in slide-in-from-top-2">
+                                <CheckCircle size={20} /> {successMsg}
                             </div>
                         )}
 
-                        <form onSubmit={handleProcessSale} className="space-y-6">
-                            <div>
-                                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 ml-1">Select Product</label>
+                        <form onSubmit={handleProcessSale} className="space-y-8">
+                            <div className="space-y-3">
+                                <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Select Product</label>
                                 <select
-                                    className="w-full bg-gray-50 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold"
+                                    className="w-full bg-gray-50 p-5 rounded-3xl outline-none focus:ring-2 focus:ring-orange-500/20 border border-transparent focus:border-orange-500/50 font-bold text-sm appearance-none cursor-pointer"
                                     onChange={(e) => setSelectedItem(inventory.find(i => i.id === e.target.value))}
                                     value={selectedItem?.id || ''}
                                     required
@@ -119,26 +125,26 @@ export default function Sales() {
                             </div>
 
                             {selectedItem && (
-                                <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 flex justify-between items-center text-gray-900">
-                                    <div>
-                                        <p className="text-[10px] font-black text-gray-400 uppercase">Unit Price</p>
-                                        <p className="text-xl font-black text-orange-600">₱{selectedItem.price_per_unit}</p>
+                                <div className="p-8 bg-gray-50 rounded-[2rem] border border-gray-100 flex justify-between items-center text-gray-900">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Unit Price</p>
+                                        <p className="text-2xl font-black text-orange-600">₱{selectedItem.price_per_unit.toLocaleString()}</p>
                                     </div>
-                                    <ArrowRight className="text-gray-300" size={28} />
-                                    <div className="text-right">
-                                        <p className="text-[10px] font-black text-gray-400 uppercase">Total Transaction</p>
-                                        <p className="text-xl font-black text-gray-900">₱{(selectedItem.price_per_unit * qtySold).toFixed(2)}</p>
+                                    <ArrowRight className="text-gray-300" size={32} />
+                                    <div className="text-right space-y-1">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Bill</p>
+                                        <p className="text-2xl font-black text-gray-900">₱{(selectedItem.price_per_unit * qtySold).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 ml-1">Quantity Sold</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                <div className="space-y-3">
+                                    <label className="block text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Quantity Sold</label>
                                     <input
                                         type="number"
                                         min="1"
-                                        className="w-full bg-gray-50 p-4 rounded-2xl outline-none font-black text-xl border border-transparent focus:border-orange-200"
+                                        className="w-full bg-gray-50 p-5 rounded-3xl outline-none font-black text-2xl border border-transparent focus:border-orange-200 focus:bg-white transition-all"
                                         value={qtySold}
                                         onChange={(e) => setQtySold(e.target.value)}
                                         required
@@ -148,7 +154,7 @@ export default function Sales() {
                                     <button
                                         type="submit"
                                         disabled={loading || !selectedItem}
-                                        className="w-full p-4 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl shadow-orange-900/20 transition-all active:scale-95 disabled:opacity-50"
+                                        className="w-full py-6 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-[0.2em] text-xs rounded-3xl shadow-2xl shadow-orange-900/30 transition-all active:scale-95 disabled:opacity-50"
                                     >
                                         {loading ? 'Processing...' : 'Complete Sale'}
                                     </button>
@@ -157,31 +163,32 @@ export default function Sales() {
                         </form>
                     </div>
 
-                    {/* RIGHT: Stock Check (SLIMMER: 1/3) */}
-                    <div className="lg:col-span-1 bg-gray-900 rounded-[2.5rem] p-8 text-white shadow-2xl h-fit">
-                        <h2 className="text-lg font-black uppercase mb-6 flex items-center gap-2">
-                            <AlertTriangle className="text-orange-500" size={20} /> Stock Check
+                    {/* RIGHT: Stock Check */}
+                    <div className="lg:col-span-1 bg-gray-900 rounded-[2.5rem] p-10 text-white shadow-2xl h-fit">
+                        <h2 className="text-lg font-black uppercase tracking-widest mb-8 flex items-center gap-3">
+                            <AlertTriangle className="text-orange-500" size={24} /> Stock Check
                         </h2>
-                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-3 custom-scrollbar">
                             {inventory.map(item => (
-                                <div key={item.id} className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
-                                    <div className="truncate pr-2">
-                                        <p className="font-bold text-xs truncate">{item.product_name}</p>
-                                        <p className="text-[9px] text-gray-500 uppercase font-black">{item.sku}</p>
+                                <div key={item.id} className="flex justify-between items-center p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                                    <div className="truncate pr-4">
+                                        <p className="font-bold text-sm truncate uppercase tracking-tight">{item.product_name}</p>
+                                        <p className="text-[9px] text-gray-500 uppercase font-black mt-1 tracking-widest">{item.sku}</p>
                                     </div>
-                                    <div className="text-right min-w-[50px]">
-                                        <p className={`font-black text-sm ${item.current_stock <= item.re_order_level ? 'text-red-500 animate-pulse' : 'text-green-500'}`}>
+                                    <div className="text-right min-w-[60px]">
+                                        <p className={`font-black text-base ${item.current_stock <= (item.re_order_level || 5) ? 'text-red-500 animate-pulse' : 'text-green-500'}`}>
                                             {item.current_stock}
                                         </p>
                                     </div>
                                 </div>
                             ))}
                             {inventory.length === 0 && (
-                                <p className="text-center text-gray-600 text-xs py-4 font-bold uppercase tracking-widest">No Items Found</p>
+                                <div className="text-center py-12">
+                                    <p className="text-gray-600 text-[10px] font-black uppercase tracking-[0.3em]">No items in stock</p>
+                                </div>
                             )}
                         </div>
                     </div>
-
                 </div>
             </main>
         </div>

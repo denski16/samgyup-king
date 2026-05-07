@@ -8,7 +8,7 @@ import {
     Smartphone,
     Navigation
 } from 'lucide-react';
-import logoImg from '../assets/LOGO NO BG.png';
+import logoImg from '../../assets/LOGO NO BG.png';
 
 export default function Landing() {
     const navigate = useNavigate();

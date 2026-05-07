@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import Sidebar from '../components/Sidebar';
+import { supabase } from "../../supabaseClient";
+import AdminSidebar from "../../components/AdminSidebar";
 import {
     Plus, Package, Trash2, Pencil, X, MapPin,
     AlertTriangle, CheckCircle
@@ -71,7 +71,7 @@ export default function Inventory() {
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900">
-            <Sidebar />
+            <AdminSidebar />
             <main className="flex-1 p-8 overflow-x-auto">
 
                 {/* Header */}
