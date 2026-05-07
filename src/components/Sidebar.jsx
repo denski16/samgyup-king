@@ -3,11 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     Package,
+    ShoppingCart, // Added for active Sales
     FileBarChart,
     Users,
     Settings,
-    LogOut,
-    UtensilsCrossed
+    LogOut
 } from 'lucide-react';
 import logoImg from '../assets/LOGO NO BG.png';
 
@@ -18,11 +18,12 @@ export default function Sidebar() {
 
     const isActive = (path) => location.pathname === path;
 
-    // Updated navigation items
+    // Updated navigation items to include both SALES and SALES REPORT
     const mainNavItems = [
         { name: 'DASHBOARD', path: '/dashboard', icon: LayoutDashboard },
         { name: 'INVENTORY', path: '/inventory', icon: Package },
-        { name: 'SALES REPORT', path: '/sales', icon: FileBarChart },
+        { name: 'SALES', path: '/sales', icon: ShoppingCart },
+        { name: 'SALES REPORT', path: '/reports', icon: FileBarChart },
         { name: 'STAFF', path: '/staff', icon: Users },
     ];
 
