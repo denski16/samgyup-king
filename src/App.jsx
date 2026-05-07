@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Staff from './pages/Staff';
@@ -8,9 +8,10 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Route */}
         <Route path="/login" element={<Login />} />
 
-        {/* PROTECTED ROUTES */}
+        {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
@@ -28,8 +29,11 @@ function App() {
           }
         />
 
-        {/* Default route */}
-        <Route path="/" element={<Login />} />
+        {/* Redirect empty path to login or dashboard */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Catch-all for 404s */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
