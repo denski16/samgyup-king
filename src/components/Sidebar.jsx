@@ -3,8 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     LayoutDashboard,
     Package,
-    ShoppingCart, // Added for active Sales
-    FileBarChart,
+    ShoppingCart, // For active Sales entry
+    FileBarChart, // For the Sales Report
     Users,
     Settings,
     LogOut
@@ -18,7 +18,7 @@ export default function Sidebar() {
 
     const isActive = (path) => location.pathname === path;
 
-    // Updated navigation items to include both SALES and SALES REPORT
+    // Navigation items with the distinct Sales and Reports routes
     const mainNavItems = [
         { name: 'DASHBOARD', path: '/dashboard', icon: LayoutDashboard },
         { name: 'INVENTORY', path: '/inventory', icon: Package },
@@ -28,7 +28,7 @@ export default function Sidebar() {
     ];
 
     const handleLogout = () => {
-        // Perform any logout logic here (e.g., supabase.auth.signOut())
+        // You can add supabase.auth.signOut() here if needed
         navigate('/');
     };
 
@@ -72,7 +72,6 @@ export default function Sidebar() {
 
                 {/* --- BOTTOM SECTION (SETTINGS & LOGOUT) --- */}
                 <div className="p-4 border-t border-gray-800 space-y-2">
-                    {/* Settings Button */}
                     <button
                         onClick={() => navigate('/settings')}
                         className={`w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group ${isActive('/settings')
@@ -81,16 +80,15 @@ export default function Sidebar() {
                             }`}
                     >
                         <Settings size={20} className={isActive('/settings') ? 'text-white' : 'group-hover:text-orange-400'} />
-                        <span className="font-bold text-sm tracking-wide">SETTINGS</span>
+                        <span className="font-bold text-sm tracking-wide uppercase">Settings</span>
                     </button>
 
-                    {/* Logout Button (Styled same as others) */}
                     <button
                         onClick={() => setShowLogoutModal(true)}
                         className="w-full text-left p-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-red-600/20 text-gray-400 hover:text-red-500"
                     >
                         <LogOut size={20} className="group-hover:text-red-500 transition-colors" />
-                        <span className="font-bold text-sm tracking-wide">LOGOUT</span>
+                        <span className="font-bold text-sm tracking-wide uppercase">Logout</span>
                     </button>
                 </div>
             </aside>
@@ -98,7 +96,7 @@ export default function Sidebar() {
             {/* --- LOGOUT CONFIRMATION MODAL --- */}
             {showLogoutModal && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl transform transition-all animate-in fade-in zoom-in duration-200">
+                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl transform transition-all animate-in fade-in zoom-in duration-200">
                         <div className="flex flex-col items-center text-center">
                             <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
                                 <LogOut size={32} />
@@ -111,13 +109,13 @@ export default function Sidebar() {
                             <div className="flex w-full gap-3">
                                 <button
                                     onClick={() => setShowLogoutModal(false)}
-                                    className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition-colors"
+                                    className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleLogout}
-                                    className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-red-900/20"
+                                    className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-2xl transition-colors shadow-lg shadow-red-900/20"
                                 >
                                     Yes, Logout
                                 </button>
