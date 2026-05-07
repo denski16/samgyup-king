@@ -11,6 +11,7 @@ export default function Inventory() {
     const [activeTab, setActiveTab] = useState('SUBIC');
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [adminName, setAdminName] = useState('Admin'); // <-- NEW: Tracker for Admin Name
 
     // Modals State
     const [showModal, setShowModal] = useState(false);
@@ -22,6 +23,26 @@ export default function Inventory() {
 
     const initialFormState = { sku: '', product_name: '', category: 'SUBIC', cost_per_unit: 0, price_per_unit: 0, initial_quantity: 0, re_order_level: 5, current_stock: 0 };
     const [formData, setFormData] = useState(initialFormState);
+
+    // --- NEW: Fetch Admin Name on Mount ---
+    useEffect(() => {
+        async function fetchAdminName() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('first_name, last_name')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile) {
+                    setAdminName(`${profile.first_name || ''} ${profile.last_name || ''} (Admin)`.trim());
+                }
+            }
+        }
+        fetchAdminName();
+    }, []);
+    // --------------------------------------
 
     useEffect(() => { fetchInventory(); }, [activeTab]);
 
@@ -52,21 +73,63 @@ export default function Inventory() {
         setShowDeleteModal(true);
     };
 
+    // --- UPDATED: confirmDelete now logs the deletion ---
     const confirmDelete = async () => {
+        // Find the item first so we know its name for the log
+        const itemToDelete = items.find(i => i.id === currentId);
+
         const { error } = await supabase.from('inventory').delete().eq('id', currentId);
-        if (error) alert(error.message);
+
+        if (error) {
+            alert(error.message);
+        } else {
+            // Log the deletion
+            if (itemToDelete) {
+                await supabase.from('activity_logs').insert([{
+                    staff_name: adminName || 'Admin',
+                    branch: activeTab,
+                    action_type: 'INVENTORY',
+                    details: `Admin deleted product: [${itemToDelete.product_name}] (SKU: ${itemToDelete.sku || 'N/A'})`
+                }]);
+            }
+        }
+
         setShowDeleteModal(false);
         fetchInventory();
     };
 
+    // --- UPDATED: handleSubmit now logs Add & Edit separately ---
     async function handleSubmit(e) {
         e.preventDefault();
-        const { error } = isEditing
-            ? await supabase.from('inventory').update(formData).eq('id', currentId)
-            : await supabase.from('inventory').insert([formData]);
 
-        if (error) alert(error.message);
-        else { setShowModal(false); fetchInventory(); }
+        let actionDetails = '';
+
+        if (isEditing) {
+            const { error } = await supabase.from('inventory').update(formData).eq('id', currentId);
+            if (error) {
+                alert(error.message);
+                return;
+            }
+            actionDetails = `Admin updated product: [${formData.product_name}]. New Stock: ${formData.current_stock}`;
+        } else {
+            const { error } = await supabase.from('inventory').insert([formData]);
+            if (error) {
+                alert(error.message);
+                return;
+            }
+            actionDetails = `Admin added new product: [${formData.product_name}] with initial stock of ${formData.current_stock}`;
+        }
+
+        // Fire off the activity log
+        await supabase.from('activity_logs').insert([{
+            staff_name: adminName || 'Admin',
+            branch: formData.category || activeTab,
+            action_type: 'INVENTORY',
+            details: actionDetails
+        }]);
+
+        setShowModal(false);
+        fetchInventory();
     }
 
     return (
@@ -141,7 +204,6 @@ export default function Inventory() {
                                                 )}
                                             </td>
 
-                                            {/* --- ACTIONS NOW ALWAYS VISIBLE --- */}
                                             <td className="p-5 text-center">
                                                 <div className="flex justify-center gap-2">
                                                     <button onClick={() => openEditModal(item)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm">
@@ -236,7 +298,6 @@ export default function Inventory() {
                     </div>
                 </div>
             )}
-
         </div>
     );
 }

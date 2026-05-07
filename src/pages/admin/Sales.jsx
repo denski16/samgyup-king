@@ -12,12 +12,34 @@ export default function Sales() {
     // RESTORED: All four branches are back
     const branches = ['SUBIC', 'MINIMART', 'CASTILLEJOS', 'KSK VARIETY'];
     const [activeBranch, setActiveBranch] = useState('SUBIC');
+    const [adminName, setAdminName] = useState('Admin'); // <-- ADDED: Tracker for Admin Name
+
     const [inventory, setInventory] = useState([]);
     const [loading, setLoading] = useState(false);
 
     const [selectedItem, setSelectedItem] = useState(null);
     const [qtySold, setQtySold] = useState(1);
     const [successMsg, setSuccessMsg] = useState('');
+
+    // --- NEW: Fetch Admin Name on Mount ---
+    useEffect(() => {
+        async function fetchAdminName() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('first_name, last_name')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile) {
+                    setAdminName(`${profile.first_name || ''} ${profile.last_name || ''} (Admin)`.trim());
+                }
+            }
+        }
+        fetchAdminName();
+    }, []);
+    // --------------------------------------
 
     useEffect(() => {
         fetchBranchInventory();
@@ -57,12 +79,26 @@ export default function Sales() {
                 product_name: selectedItem.product_name,
                 branch: activeBranch,
                 quantity_sold: qtySold,
-                total_price: selectedItem.price_per_unit * qtySold
+                total_price: selectedItem.price_per_unit * qtySold,
+                sale_date: new Date().toISOString() // Good practice to include timestamp
             }]);
 
         if (invError || saleError) {
-            alert("Transaction Failed!");
+            alert("Transaction Failed! " + (invError?.message || saleError?.message));
         } else {
+            // --- NEW ADMIN LOGGING BLOCK ---
+            const { error: logError } = await supabase.from('activity_logs').insert([{
+                staff_name: adminName || 'Admin',
+                branch: activeBranch || 'Unknown Branch',
+                action_type: 'SALE',
+                details: `Admin processed sale: ${qtySold}x ${selectedItem.product_name} (Total: ₱${(selectedItem.price_per_unit * qtySold).toLocaleString()})`
+            }]);
+
+            if (logError) {
+                console.error("ACTIVITY LOG FAILED TO PUSH:", logError);
+            }
+            // -------------------------------
+
             setSuccessMsg(`Sold ${qtySold} units of ${selectedItem.product_name}`);
             setSelectedItem(null);
             setQtySold(1);

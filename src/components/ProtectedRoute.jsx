@@ -43,7 +43,7 @@ const ProtectedRoute = ({ children, role }) => {
     }, [role]);
 
     if (loading) {
-        return <div className="h-screen flex items-center justify-center bg-gray-950 text-white font-black italic uppercase animate-pulse">Checking Permissions...</div>;
+        return <div className="h-screen flex items-center justify-center bg-gray-950 text-white font-black italic uppercase animate-pulse">Loading</div>;
     }
 
     // --- THE REDIRECT LOGIC ---
