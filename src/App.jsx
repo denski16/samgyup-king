@@ -12,14 +12,15 @@ import Inventory from './pages/admin/Inventory';
 import AdminSales from './pages/admin/Sales';
 import SalesReport from './pages/admin/SalesReport';
 import StaffManagement from './pages/admin/Staff';
-import AdminSettings from './pages/admin/Settings'; // Renamed for clarity
+import AdminSettings from './pages/admin/Settings';
 
 // --- STAFF PAGES ---
 import StaffDashboard from './pages/staff/Dashboard';
-import StaffSales from './pages/staff/Sales';
 import StaffInventory from './pages/staff/Inventory';
 import StaffSalesReport from './pages/staff/SalesReport';
-import StaffSettings from './pages/staff/Settings'; // <-- 1. NEW IMPORT HERE
+import StaffSettings from './pages/staff/Settings';
+import StaffSales from './pages/staff/Sales';       // <-- YOUR ORIGINAL SALES PAGE IS BACK
+import StaffCashier from './pages/staff/Cashier';   // <-- THE NEW POS PAGE IS HERE TOO
 
 export default function App() {
   return (
@@ -65,18 +66,23 @@ export default function App() {
           element={<ProtectedRoute role="Staff"><StaffDashboard /></ProtectedRoute>}
         />
         <Route
+          path="/staff/inventory"
+          element={<ProtectedRoute role="Staff"><StaffInventory /></ProtectedRoute>}
+        />
+        {/* YOUR ORIGINAL SALES PAGE */}
+        <Route
           path="/staff/sales"
           element={<ProtectedRoute role="Staff"><StaffSales /></ProtectedRoute>}
         />
+        {/* THE NEW POS PAGE (To test it out) */}
         <Route
-          path="/staff/inventory"
-          element={<ProtectedRoute role="Staff"><StaffInventory /></ProtectedRoute>}
+          path="/staff/pos"
+          element={<ProtectedRoute role="Staff"><StaffCashier /></ProtectedRoute>}
         />
         <Route
           path="/staff/reports"
           element={<ProtectedRoute role="Staff"><StaffSalesReport /></ProtectedRoute>}
         />
-        {/* --- 2. NEW STAFF SETTINGS ROUTE HERE --- */}
         <Route
           path="/staff/settings"
           element={<ProtectedRoute role="Staff"><StaffSettings /></ProtectedRoute>}

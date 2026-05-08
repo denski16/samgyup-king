@@ -6,7 +6,9 @@ import {
     ArrowRight,
     CheckCircle,
     AlertTriangle,
-    RefreshCcw
+    RefreshCcw,
+    Search,
+    X
 } from 'lucide-react';
 
 export default function Sales() {
@@ -18,6 +20,7 @@ export default function Sales() {
     const [loading, setLoading] = useState(false);
     const [fetchingInventory, setFetchingInventory] = useState(false);
 
+    const [searchQuery, setSearchQuery] = useState('');
     const [selectedItem, setSelectedItem] = useState(null);
     const [qtySold, setQtySold] = useState(1);
     const [successMsg, setSuccessMsg] = useState('');
@@ -51,9 +54,25 @@ export default function Sales() {
             .select('*')
             .eq('category', activeBranch)
             .order('product_name', { ascending: true });
+
         setInventory(data || []);
+
+        // Reset selections when switching branches
+        setSelectedItem(null);
+        setSearchQuery('');
+        setQtySold(1);
+
         setFetchingInventory(false);
     }
+
+    // Filter logic for the search bar
+    const filteredInventory = inventory.filter(item => {
+        const query = searchQuery.toLowerCase();
+        return (
+            item.product_name?.toLowerCase().includes(query) ||
+            item.sku?.toLowerCase().includes(query)
+        );
+    });
 
     async function handleProcessSale(e) {
         e.preventDefault();
@@ -83,7 +102,6 @@ export default function Sales() {
                 branch: activeBranch,
                 quantity_sold: qtySold,
                 total_price: selectedItem.price_per_unit * qtySold,
-                // FIXED: Use local Date object to respect Asia/Manila database setting
                 sale_date: new Date()
             }]);
 
@@ -96,11 +114,12 @@ export default function Sales() {
                 branch: activeBranch || 'Unknown Branch',
                 action_type: 'SALE',
                 details: `Admin processed sale: ${qtySold}x ${selectedItem.product_name} (Total: ₱${(selectedItem.price_per_unit * qtySold).toLocaleString(undefined, { minimumFractionDigits: 2 })})`,
-                created_at: new Date() // Consistent local timestamp
+                created_at: new Date()
             }]);
 
             setSuccessMsg(`Sold ${qtySold} units of ${selectedItem.product_name}`);
             setSelectedItem(null);
+            setSearchQuery('');
             setQtySold(1);
             fetchBranchInventory();
             setTimeout(() => setSuccessMsg(''), 3000);
@@ -142,33 +161,64 @@ export default function Sales() {
                         )}
 
                         <form onSubmit={handleProcessSale} className="space-y-6 md:space-y-8">
+
+                            {/* --- NEW SEARCHABLE PRODUCT SELECTOR --- */}
                             <div className="space-y-3">
-                                <label className="block text-[9px] md:text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Select Product</label>
-                                <select
-                                    className="w-full bg-gray-50 p-4 md:p-5 rounded-2xl md:rounded-3xl outline-none focus:ring-2 focus:ring-orange-500/20 border border-transparent focus:border-orange-500/50 font-bold text-xs md:text-sm appearance-none cursor-pointer"
-                                    onChange={(e) => setSelectedItem(inventory.find(i => i.id === e.target.value))}
-                                    value={selectedItem?.id || ''}
-                                    required
-                                >
-                                    <option value="">-- Choose Item from {activeBranch} --</option>
-                                    {inventory.map(item => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.product_name} (Stock: {item.current_stock})
-                                        </option>
-                                    ))}
-                                </select>
+                                <label className="block text-[9px] md:text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Search & Select Product</label>
+
+                                <div className="relative">
+                                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder={`Search items in ${activeBranch}...`}
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full bg-gray-50 pl-12 pr-10 py-4 md:py-5 rounded-2xl md:rounded-3xl outline-none focus:ring-2 focus:ring-orange-500/20 border border-transparent focus:border-orange-500/50 font-bold text-xs md:text-sm transition-all"
+                                    />
+                                    {searchQuery && (
+                                        <button type="button" onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                            <X size={16} />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="max-h-48 md:max-h-60 overflow-y-auto custom-scrollbar pr-2 space-y-2 mt-2">
+                                    {filteredInventory.length === 0 ? (
+                                        <div className="p-4 text-center text-[10px] font-black uppercase text-gray-400 tracking-widest bg-gray-50 rounded-2xl">
+                                            No products found matching "{searchQuery}"
+                                        </div>
+                                    ) : (
+                                        filteredInventory.map(item => (
+                                            <div
+                                                key={item.id}
+                                                onClick={() => setSelectedItem(item)}
+                                                className={`p-4 rounded-xl md:rounded-2xl cursor-pointer border-2 transition-all flex justify-between items-center ${selectedItem?.id === item.id ? 'border-orange-500 bg-orange-50 shadow-sm' : 'border-transparent bg-gray-50 hover:border-orange-200'}`}
+                                            >
+                                                <div className="min-w-0 pr-2">
+                                                    <p className="font-black text-xs md:text-sm text-gray-900 uppercase truncate">{item.product_name}</p>
+                                                    <p className="text-[9px] text-gray-400 font-bold tracking-widest mt-0.5">{item.sku || 'NO SKU'}</p>
+                                                </div>
+                                                <div className="text-right flex-shrink-0">
+                                                    <p className="text-sm md:text-base text-orange-600 font-black">₱{item.price_per_unit}</p>
+                                                    <p className="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Stock: <span className={item.current_stock <= (item.re_order_level || 5) ? 'text-red-500' : 'text-gray-600'}>{item.current_stock}</span></p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
+                            {/* --- END SEARCHABLE PRODUCT SELECTOR --- */}
 
                             {selectedItem && (
-                                <div className="p-6 md:p-8 bg-gray-50 rounded-[1.5rem] md:rounded-[2rem] border border-gray-100 flex justify-between items-center text-gray-900">
-                                    <div className="space-y-1">
-                                        <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">Unit Price</p>
-                                        <p className="text-xl md:text-2xl font-black text-orange-600">₱{selectedItem.price_per_unit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                <div className="p-6 md:p-8 bg-gray-900 rounded-[1.5rem] md:rounded-[2rem] border border-gray-800 flex justify-between items-center text-white shadow-xl">
+                                    <div className="space-y-1 min-w-0 pr-2">
+                                        <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">{selectedItem.product_name}</p>
+                                        <p className="text-xl md:text-2xl font-black text-orange-500">₱{selectedItem.price_per_unit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                                     </div>
-                                    <ArrowRight className="text-gray-300 mx-2" size={24} />
-                                    <div className="text-right space-y-1">
+                                    <ArrowRight className="text-gray-600 mx-2 flex-shrink-0" size={24} />
+                                    <div className="text-right space-y-1 flex-shrink-0">
                                         <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Bill</p>
-                                        <p className="text-xl md:text-2xl font-black text-gray-900">₱{(selectedItem.price_per_unit * qtySold).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                        <p className="text-xl md:text-2xl font-black text-white">₱{(selectedItem.price_per_unit * qtySold).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                                     </div>
                                 </div>
                             )}
@@ -179,10 +229,12 @@ export default function Sales() {
                                     <input
                                         type="number"
                                         min="1"
-                                        className="w-full bg-gray-50 p-4 md:p-5 rounded-2xl md:rounded-3xl outline-none font-black text-xl md:text-2xl border border-transparent focus:border-orange-200 focus:bg-white transition-all"
+                                        inputMode="numeric"
+                                        className="w-full bg-gray-50 p-4 md:p-5 rounded-2xl md:rounded-3xl outline-none font-black text-xl md:text-2xl border border-transparent focus:border-orange-200 focus:bg-white transition-all disabled:opacity-50"
                                         value={qtySold}
                                         onChange={(e) => setQtySold(e.target.value)}
                                         required
+                                        disabled={!selectedItem}
                                     />
                                 </div>
                                 <div className="flex items-end">

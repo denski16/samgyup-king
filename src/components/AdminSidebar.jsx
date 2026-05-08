@@ -49,7 +49,7 @@ export default function AdminSidebar() {
 
     return (
         <>
-            {/* --- MOVED: Top-Left Mobile Menu Button --- */}
+            {/* --- Top-Left Mobile Menu Button --- */}
             <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="md:hidden fixed top-5 left-5 z-[130] p-3 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-md hover:text-orange-600 hover:border-orange-200 active:scale-95 transition-all"
@@ -77,22 +77,24 @@ export default function AdminSidebar() {
                         <X size={16} />
                     </button>
 
-                    {/* CLICKABLE BRANDING HEADER */}
+                    {/* --- UPDATED BRANDING HEADER --- */}
                     <div
                         onClick={() => {
                             navigate('/admin/dashboard');
                             setIsMobileMenuOpen(false);
                         }}
-                        className="flex flex-col items-center gap-4 cursor-pointer group"
+                        className="flex items-center gap-3 cursor-pointer group mt-2"
                         title="Go to Dashboard"
                     >
-                        <div className="w-20 h-20 rounded-full bg-white p-2 shadow-2xl transition-transform duration-300 group-hover:scale-105 group-hover:shadow-orange-900/50">
+                        {/* REMOVED bg-white and p-1.5, slightly reduced w/h */}
+                        <div className="w-10 h-10 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
                             <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
                         </div>
-                        <div className="text-center transition-opacity duration-300 group-hover:opacity-80">
-                            <span className="block text-xl font-black tracking-tighter text-orange-500 uppercase leading-none">Samgyup King</span>
-                            <span className="text-[9px] font-black text-gray-500 tracking-[0.3em] uppercase flex items-center justify-center gap-1 mt-2">
-                                <ShieldCheck size={10} className="text-green-500" /> Admin Suite
+                        <div className="text-left transition-opacity duration-300 group-hover:opacity-80 min-w-0">
+                            {/* REDUCED text size to text-base to fit better */}
+                            <span className="block text-base font-black tracking-tight text-orange-500 uppercase leading-none truncate">Samgyup King</span>
+                            <span className="text-[8px] font-black text-gray-500 tracking-[0.2em] uppercase flex items-center gap-1 mt-1.5">
+                                <ShieldCheck size={10} className="text-green-500 flex-shrink-0" /> Admin Portal
                             </span>
                         </div>
                     </div>

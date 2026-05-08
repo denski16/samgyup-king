@@ -10,7 +10,8 @@ import {
     LogOut,
     Utensils,
     Menu,
-    X
+    X,
+    Lock // Added Lock icon for the password modal
 } from 'lucide-react';
 import logoImg from '../assets/LOGO NO BG.png';
 
@@ -19,6 +20,11 @@ export default function StaffSidebar() {
     const location = useLocation();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // --- POS Password State ---
+    const [showPosModal, setShowPosModal] = useState(false);
+    const [posPassword, setPosPassword] = useState('');
+    const [posError, setPosError] = useState('');
 
     const isActive = (path) => location.pathname === path;
 
@@ -30,7 +36,8 @@ export default function StaffSidebar() {
     const navItems = [
         { name: 'DASHBOARD', path: '/staff/dashboard', icon: LayoutDashboard },
         { name: 'INVENTORY', path: '/staff/inventory', icon: Package },
-        { name: 'SALES', path: '/staff/sales', icon: ShoppingBag },
+        { name: 'SALES (OLD)', path: '/staff/sales', icon: ShoppingBag },
+        { name: 'POS SYSTEM', path: '/staff/pos', icon: ShoppingBag },
         { name: 'SHIFT REPORT', path: '/staff/reports', icon: FileBarChart },
     ];
 
@@ -41,6 +48,30 @@ export default function StaffSidebar() {
             navigate('/login', { replace: true });
         } catch (error) {
             alert("Error: " + error.message);
+        }
+    };
+
+    // Intercept clicks to check if they are trying to access the POS
+    const handleNavClick = (path) => {
+        if (path === '/staff/pos') {
+            setPosPassword(''); // Clear old inputs
+            setPosError('');
+            setShowPosModal(true);
+        } else {
+            navigate(path);
+        }
+    };
+
+    // Verify POS Testing Password
+    const handlePosAccess = (e) => {
+        e.preventDefault();
+
+        // CHANGE THIS TO WHATEVER TESTING PASSWORD YOU WANT
+        if (posPassword === 'admin123') {
+            setShowPosModal(false);
+            navigate('/staff/pos');
+        } else {
+            setPosError('Incorrect access code.');
         }
     };
 
@@ -74,21 +105,19 @@ export default function StaffSidebar() {
                         <X size={16} />
                     </button>
 
-                    {/* CLICKABLE BRANDING (Home Button) */}
+                    {/* CLICKABLE BRANDING */}
                     <div
-                        onClick={() => {
-                            navigate('/staff/dashboard');
-                            setIsMobileMenuOpen(false);
-                        }}
-                        className="flex flex-col items-center gap-4 cursor-pointer group"
+                        onClick={() => handleNavClick('/staff/dashboard')}
+                        className="flex items-center gap-3 cursor-pointer group mt-2"
+                        title="Go to Dashboard"
                     >
-                        <div className="w-20 h-20 rounded-full bg-white p-2 shadow-2xl transition-transform duration-300 group-hover:scale-105 group-hover:shadow-orange-900/50">
+                        <div className="w-10 h-10 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
                             <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
                         </div>
-                        <div className="text-center group-hover:opacity-80 transition-opacity">
-                            <span className="block text-xl font-black tracking-tighter text-orange-500 uppercase leading-none">Samgyup King</span>
-                            <span className="text-[9px] font-black text-gray-500 tracking-[0.3em] uppercase flex items-center justify-center gap-1 mt-2">
-                                <Utensils size={10} className="text-orange-500" /> Staff Portal
+                        <div className="text-left transition-opacity duration-300 group-hover:opacity-80 min-w-0">
+                            <span className="block text-base font-black tracking-tight text-orange-500 uppercase leading-none truncate">Samgyup King</span>
+                            <span className="text-[8px] font-black text-gray-500 tracking-[0.2em] uppercase flex items-center gap-1 mt-1.5">
+                                <Utensils size={10} className="text-orange-500 flex-shrink-0" /> Staff Portal
                             </span>
                         </div>
                     </div>
@@ -102,14 +131,17 @@ export default function StaffSidebar() {
                         return (
                             <button
                                 key={item.name}
-                                onClick={() => navigate(item.path)}
+                                onClick={() => handleNavClick(item.path)}
                                 className={`w-full text-left p-4 rounded-2xl transition-all flex items-center gap-4 group ${active
                                     ? 'bg-orange-600 text-white shadow-xl shadow-orange-900/40'
                                     : 'hover:bg-white/5 text-gray-400 hover:text-white'
                                     }`}
                             >
                                 <Icon size={20} className={active ? 'text-white' : 'group-hover:text-orange-500'} />
-                                <span className="font-black text-xs tracking-widest uppercase">{item.name}</span>
+                                <span className="font-black text-xs tracking-widest uppercase flex-1">{item.name}</span>
+                                {item.path === '/staff/pos' && !active && (
+                                    <Lock size={12} className="text-gray-600" />
+                                )}
                             </button>
                         );
                     })}
@@ -118,7 +150,7 @@ export default function StaffSidebar() {
                 {/* --- FOOTER --- */}
                 <div className="p-4 border-t border-gray-800 space-y-2">
                     <button
-                        onClick={() => navigate('/staff/settings')}
+                        onClick={() => handleNavClick('/staff/settings')}
                         className={`w-full text-left p-4 rounded-xl flex items-center gap-4 text-xs font-bold uppercase tracking-widest transition-all ${isActive('/staff/settings') ? 'text-orange-500' : 'text-gray-500 hover:text-white'}`}
                     >
                         <Settings size={18} /> Profile Settings
@@ -133,6 +165,40 @@ export default function StaffSidebar() {
                     </button>
                 </div>
             </aside>
+
+            {/* --- POS PASSWORD MODAL --- */}
+            {showPosModal && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-gray-900 font-sans">
+                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl animate-in zoom-in duration-200">
+                        <div className="w-14 h-14 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Lock size={28} />
+                        </div>
+                        <h3 className="text-xl font-black uppercase tracking-tight mb-2 text-center">POS Testing Mode</h3>
+                        <p className="text-gray-500 mb-6 text-[10px] font-bold uppercase tracking-widest text-center leading-relaxed">
+                            Enter the admin override code to access the new POS terminal.
+                        </p>
+
+                        <form onSubmit={handlePosAccess} className="space-y-4">
+                            <div>
+                                <input
+                                    type="password"
+                                    autoFocus
+                                    placeholder="Enter Code..."
+                                    value={posPassword}
+                                    onChange={(e) => setPosPassword(e.target.value)}
+                                    className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-center tracking-widest border-2 border-transparent"
+                                />
+                                {posError && <p className="text-red-500 text-[10px] font-black uppercase text-center mt-2 animate-pulse">{posError}</p>}
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={() => setShowPosModal(false)} className="flex-1 py-4 bg-gray-100 font-black uppercase text-[10px] tracking-widest rounded-xl transition-colors hover:bg-gray-200">Cancel</button>
+                                <button type="submit" className="flex-1 py-4 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-orange-900/20 transition-all">Unlock</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Logout Modal */}
             {showLogoutModal && (
