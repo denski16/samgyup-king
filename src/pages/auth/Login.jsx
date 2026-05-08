@@ -29,6 +29,11 @@ export default function Login() {
         }
 
         try {
+            // ---> UPDATED: Tell the database this user is now ON DUTY using the new column <---
+            await supabase.from('profiles')
+                .update({ duty_status: 'On Duty' })
+                .eq('id', authData.user.id);
+
             // 2. Fetch Profile from 'profiles' table
             const { data: profile, error: profileError } = await supabase
                 .from('profiles')
@@ -36,7 +41,7 @@ export default function Login() {
                 .eq('id', authData.user.id)
                 .single();
 
-            // DEBUG LOGS (Check these in your browser console if it fails)
+            // DEBUG LOGS
             console.log("User Authenticated ID:", authData.user.id);
             console.log("Profile from Database:", profile);
 
@@ -47,8 +52,7 @@ export default function Login() {
                 return;
             }
 
-            // 3. Updated Redirection Logic - MUST MATCH APP.JSX PREFIXES
-            // We trim to avoid any hidden spaces in the DB
+            // 3. Updated Redirection Logic
             const userRole = profile.role.trim();
 
             if (userRole === 'Admin') {

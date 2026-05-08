@@ -11,7 +11,7 @@ import {
     Utensils,
     Menu,
     X,
-    Lock // Added Lock icon for the password modal
+    Lock
 } from 'lucide-react';
 import logoImg from '../assets/LOGO NO BG.png';
 
@@ -41,13 +41,41 @@ export default function StaffSidebar() {
         { name: 'SHIFT REPORT', path: '/staff/reports', icon: FileBarChart },
     ];
 
+    // ---> UPDATED LOGOUT FUNCTION <---
     const handleLogout = async () => {
         try {
+            console.log("1. Starting logout process...");
+
+            // 1. Get the current user BEFORE we sign them out
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+            if (userError) throw userError;
+
+            if (user) {
+                console.log("2. Updating database to 'Off Duty'...");
+
+                // 2. Update the new duty_status column
+                const { error: updateError } = await supabase.from('profiles')
+                    .update({ duty_status: 'Off Duty' })
+                    .eq('id', user.id);
+
+                if (updateError) {
+                    console.error("❌ Database Update Failed:", updateError.message);
+                } else {
+                    console.log("✅ Successfully marked as Off Duty in database.");
+                }
+            }
+
+            console.log("3. Signing out of Supabase Auth...");
+            // 3. Now we actually end their session
             await supabase.auth.signOut();
+
             setShowLogoutModal(false);
             navigate('/login', { replace: true });
+
         } catch (error) {
-            alert("Error: " + error.message);
+            console.error("❌ Logout Error:", error.message);
+            alert("Logout Error: " + error.message);
         }
     };
 

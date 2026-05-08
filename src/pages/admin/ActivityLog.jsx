@@ -9,8 +9,7 @@ import {
     UserCheck,
     Store,
     ShieldCheck,
-    Calendar,
-    RefreshCcw // <-- Fixed: Import added to resolve ReferenceError
+    RefreshCcw
 } from 'lucide-react';
 
 export default function ActivityLog() {
@@ -21,37 +20,64 @@ export default function ActivityLog() {
     useEffect(() => {
         fetchData();
 
-        // Real-time subscription to update the feed instantly
-        const subscription = supabase
+        // 1. Listen for new Activity Logs (Sales, Inventory updates, etc.)
+        const logSubscription = supabase
             .channel('activity_channel')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity_logs' }, payload => {
-                setLogs(current => [payload.new, ...current].slice(0, 50));
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'activity_logs'
+            }, payload => {
+                // Add the new log to the top of the list
+                setLogs(current => [payload.new, ...current].slice(0, 100));
             })
             .subscribe();
 
-        return () => supabase.removeChannel(subscription);
+        // 2. Listen for Profile changes (Login/Logout via duty_status)
+        const profileSubscription = supabase
+            .channel('profiles_channel')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'profiles'
+            }, payload => {
+                // Update the specific staff member in the roster state
+                setStaffProfiles(current => current.map(staff =>
+                    staff.id === payload.new.id ? payload.new : staff
+                ));
+            })
+            .subscribe();
+
+        // Cleanup subscriptions on unmount
+        return () => {
+            supabase.removeChannel(logSubscription);
+            supabase.removeChannel(profileSubscription);
+        };
     }, []);
 
     async function fetchData() {
         setLoading(true);
-        // 1. Fetch recent activity (Last 100 entries)
-        const { data: logData } = await supabase
-            .from('activity_logs')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(100);
+        try {
+            // Fetch logs
+            const { data: logData } = await supabase
+                .from('activity_logs')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(100);
+            setLogs(logData || []);
 
-        setLogs(logData || []);
-
-        // 2. Fetch staff roster
-        const { data: staffData } = await supabase
-            .from('profiles')
-            .select('*')
-            .neq('role', 'client')
-            .order('last_name', { ascending: true });
-
-        setStaffProfiles(staffData || []);
-        setLoading(false);
+            // Fetch staff
+            const { data: staffData } = await supabase
+                .from('profiles')
+                .select('*')
+                .neq('role', 'client')
+                .order('last_name', { ascending: true });
+            setStaffProfiles(staffData || []);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        } finally {
+            setLoading(false);
+        }
     }
 
     const getIconForAction = (type) => {
@@ -60,28 +86,23 @@ export default function ActivityLog() {
         return <ShieldCheck size={16} className="text-orange-500" />;
     };
 
-    // Smart Date Formatter for PH Timezone
     const formatLogDate = (dateString) => {
         const date = new Date(dateString);
         const now = new Date();
-
         if (date.toDateString() === now.toDateString()) {
             return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
         }
-
         const yesterday = new Date();
         yesterday.setDate(now.getDate() - 1);
         if (date.toDateString() === yesterday.toDateString()) {
             return `Yesterday, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
         }
-
         return date.toLocaleDateString('en-PH', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
     };
+
+    const activeBranches = Array.from(new Set(staffProfiles.flatMap(staff => staff.branches || []))).sort();
 
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
@@ -96,10 +117,9 @@ export default function ActivityLog() {
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-
                     {/* LEFT COLUMN: LIVE ACTIVITY FEED */}
                     <div className="lg:col-span-2 bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[60vh] md:h-[75vh]">
-                        <div className="p-6 md:p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                        <div className="p-6 md:p-8 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center shrink-0">
                             <h2 className="text-lg md:text-xl font-black uppercase tracking-tight">Real-Time Log</h2>
                             <span className="animate-pulse flex items-center gap-2 text-[10px] font-black text-green-600 uppercase">
                                 <div className="w-2 h-2 bg-green-500 rounded-full"></div> Live
@@ -143,31 +163,53 @@ export default function ActivityLog() {
 
                     {/* RIGHT COLUMN: STAFF STATUS */}
                     <div className="lg:col-span-1 bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl p-6 md:p-8 flex flex-col h-[50vh] md:h-[75vh]">
-                        <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-white mb-6 flex items-center gap-2">
+                        <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-white mb-6 flex items-center gap-2 shrink-0">
                             <UserCheck className="text-orange-500" size={20} /> Branch Rosters
                         </h2>
 
-                        <div className="flex-1 overflow-y-auto space-y-4 pr-2 custom-scrollbar">
-                            {staffProfiles.map(staff => (
-                                <div key={staff.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <p className="font-black text-white uppercase tracking-tight text-xs md:text-sm truncate mr-2">
-                                            {staff.first_name} {staff.last_name}
-                                        </p>
-                                        <span className={`w-2 h-2 flex-shrink-0 rounded-full ${staff.status === 'Active' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]' : 'bg-gray-500'}`}></span>
+                        <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar">
+                            {activeBranches.map(branch => {
+                                const staffInBranch = staffProfiles.filter(s => s.branches?.includes(branch));
+                                if (staffInBranch.length === 0) return null;
+
+                                return (
+                                    <div key={branch} className="space-y-3">
+                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-white/10 pb-2">
+                                            <Store size={12} className="text-orange-500" /> {branch}
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {staffInBranch.map(staff => {
+                                                // Check for On Duty status
+                                                const isOnDuty = staff.duty_status?.toUpperCase() === 'ON DUTY';
+                                                return (
+                                                    <div key={staff.id} className="p-3 rounded-xl bg-white/5 border border-white/5 flex justify-between items-center transition-colors hover:bg-white/10">
+                                                        <div className="flex items-center gap-3 min-w-0 pr-2">
+                                                            <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 font-bold text-[10px] uppercase shrink-0 border border-gray-700">
+                                                                {staff.first_name?.charAt(0)}{staff.last_name?.charAt(0)}
+                                                            </div>
+                                                            <p className="font-black text-white uppercase tracking-tight text-xs truncate">
+                                                                {staff.first_name} {staff.last_name}
+                                                            </p>
+                                                        </div>
+                                                        {isOnDuty ? (
+                                                            <span className="bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-1 rounded-md text-[8px] font-black tracking-widest uppercase flex items-center gap-1.5 shrink-0 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
+                                                                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.8)]"></div>
+                                                                On Duty
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-600 bg-gray-950 px-2 py-1 rounded-md text-[8px] font-black tracking-widest uppercase shrink-0 border border-white/5">
+                                                                Off Duty
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                    <div className="flex flex-wrap gap-1 mt-2">
-                                        {staff.branches?.map(b => (
-                                            <span key={b} className="text-[7px] md:text-[8px] bg-white/10 text-gray-300 px-2 py-1 rounded-md uppercase font-black tracking-widest flex items-center gap-1">
-                                                <Store size={8} /> {b}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
-
                 </div>
             </main>
         </div>
