@@ -214,7 +214,6 @@ export default function Cashier() {
                 </div>
             </header>
 
-            {/* MAIN CONTENT - Changed to md:flex-row to split on iPad Portrait */}
             <main className="flex-1 flex flex-col md:flex-row p-3 md:p-4 lg:p-6 gap-4 md:gap-6 min-h-0 w-full max-w-[1600px] mx-auto">
 
                 {/* LEFT: Menu & Branches */}
@@ -264,7 +263,7 @@ export default function Cashier() {
                         </div>
                     )}
 
-                    {/* Product Grid - Adjusted grid columns for iPad sizes */}
+                    {/* Product Grid - Updated for smaller items (more columns, smaller text/padding) */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 md:pr-2 pb-4">
                         {loading ? (
                             <div className="h-full flex flex-col items-center justify-center text-gray-400 font-black uppercase tracking-widest text-xs animate-pulse">
@@ -275,7 +274,7 @@ export default function Cashier() {
                                 {activeBranch ? 'No products found.' : 'Select a branch first.'}
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
+                            <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3">
                                 {filteredInventory.map((item) => {
                                     const isOutOfStock = item.current_stock <= 0;
                                     return (
@@ -283,22 +282,22 @@ export default function Cashier() {
                                             key={item.id}
                                             onClick={() => addToCart(item)}
                                             disabled={isOutOfStock}
-                                            className={`p-3 md:p-4 rounded-2xl md:rounded-3xl text-left transition-all active:scale-95 flex flex-col justify-between aspect-square border ${isOutOfStock ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed grayscale' : 'bg-white border-gray-100 hover:border-orange-500 hover:shadow-xl hover:shadow-orange-900/10'}`}
+                                            className={`p-2.5 md:p-3 rounded-xl md:rounded-2xl text-left transition-all active:scale-95 flex flex-col justify-between aspect-square border ${isOutOfStock ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed grayscale' : 'bg-white border-gray-100 hover:border-orange-500 hover:shadow-xl hover:shadow-orange-900/10'}`}
                                         >
                                             <div>
                                                 <div className="flex justify-between items-start mb-1 gap-1">
-                                                    <p className="text-[7px] md:text-[8px] font-black tracking-widest uppercase text-gray-400 truncate">
+                                                    <p className="text-[6px] md:text-[7px] font-black tracking-widest uppercase text-gray-400 truncate">
                                                         {item.category || 'UNTAGGED'}
                                                     </p>
-                                                    <span className="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-[7px] md:text-[8px] font-black uppercase tracking-widest shrink-0">
+                                                    <span className="bg-gray-100 text-gray-600 px-1 py-0.5 rounded text-[6px] md:text-[7px] font-black uppercase tracking-widest shrink-0">
                                                         {item.unit || '-'}
                                                     </span>
                                                 </div>
-                                                <p className="font-black text-xs md:text-sm lg:text-base text-gray-900 uppercase leading-tight line-clamp-2 mb-1">{item.product_name}</p>
+                                                <p className="font-black text-[10px] md:text-xs lg:text-sm text-gray-900 uppercase leading-tight line-clamp-2 mb-1">{item.product_name}</p>
                                             </div>
-                                            <div className="mt-2 md:mt-4">
-                                                <p className="text-base md:text-lg lg:text-xl font-black text-orange-600 mb-0.5 md:mb-1">₱{item.price_per_unit}</p>
-                                                <p className={`text-[8px] md:text-[9px] font-black tracking-widest uppercase ${item.current_stock <= (item.re_order_level || 5) ? 'text-red-500' : 'text-green-500'}`}>
+                                            <div className="mt-1 md:mt-2">
+                                                <p className="text-sm md:text-base lg:text-lg font-black text-orange-600 mb-0.5">₱{item.price_per_unit}</p>
+                                                <p className={`text-[7px] md:text-[8px] font-black tracking-widest uppercase ${item.current_stock <= (item.re_order_level || 5) ? 'text-red-500' : 'text-green-500'}`}>
                                                     {isOutOfStock ? 'OUT OF STOCK' : `Stock: ${item.current_stock}`}
                                                 </p>
                                             </div>
