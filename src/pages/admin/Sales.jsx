@@ -52,7 +52,7 @@ export default function Sales() {
         const { data } = await supabase
             .from('inventory')
             .select('*')
-            .eq('category', activeBranch)
+            .eq('branch', activeBranch) // <-- UPDATED to use the new 'branch' column
             .order('product_name', { ascending: true });
 
         setInventory(data || []);
@@ -65,12 +65,14 @@ export default function Sales() {
         setFetchingInventory(false);
     }
 
-    // Filter logic for the search bar
+    // Filter logic for the search bar (now includes category and unit)
     const filteredInventory = inventory.filter(item => {
         const query = searchQuery.toLowerCase();
         return (
             item.product_name?.toLowerCase().includes(query) ||
-            item.sku?.toLowerCase().includes(query)
+            item.sku?.toLowerCase().includes(query) ||
+            item.category?.toLowerCase().includes(query) ||
+            item.unit?.toLowerCase().includes(query)
         );
     });
 
@@ -108,16 +110,16 @@ export default function Sales() {
         if (invError || saleError) {
             alert("Transaction Failed!");
         } else {
-            // 3. Log Activity
+            // 3. Log Activity (Added the Unit to the log so it's clear what was sold)
             await supabase.from('activity_logs').insert([{
                 staff_name: adminName || 'Admin',
                 branch: activeBranch || 'Unknown Branch',
                 action_type: 'SALE',
-                details: `Admin processed sale: ${qtySold}x ${selectedItem.product_name} (Total: ₱${(selectedItem.price_per_unit * qtySold).toLocaleString(undefined, { minimumFractionDigits: 2 })})`,
+                details: `Admin processed sale: ${qtySold}x ${selectedItem.product_name} [${selectedItem.unit || '-'}] (Total: ₱${(selectedItem.price_per_unit * qtySold).toLocaleString(undefined, { minimumFractionDigits: 2 })})`,
                 created_at: new Date()
             }]);
 
-            setSuccessMsg(`Sold ${qtySold} units of ${selectedItem.product_name}`);
+            setSuccessMsg(`Sold ${qtySold} units of ${selectedItem.product_name} [${selectedItem.unit || '-'}]`);
             setSelectedItem(null);
             setSearchQuery('');
             setQtySold(1);
@@ -195,12 +197,16 @@ export default function Sales() {
                                                 className={`p-4 rounded-xl md:rounded-2xl cursor-pointer border-2 transition-all flex justify-between items-center ${selectedItem?.id === item.id ? 'border-orange-500 bg-orange-50 shadow-sm' : 'border-transparent bg-gray-50 hover:border-orange-200'}`}
                                             >
                                                 <div className="min-w-0 pr-2">
-                                                    <p className="font-black text-xs md:text-sm text-gray-900 uppercase truncate">{item.product_name}</p>
-                                                    <p className="text-[9px] text-gray-400 font-bold tracking-widest mt-0.5">{item.sku || 'NO SKU'}</p>
+                                                    <p className="font-black text-xs md:text-sm text-gray-900 uppercase truncate">
+                                                        {item.product_name} <span className="text-orange-600 bg-orange-100 px-2 py-0.5 rounded-md text-[10px] ml-1">[{item.unit || '-'}]</span>
+                                                    </p>
+                                                    <p className="text-[9px] text-gray-400 font-bold tracking-widest mt-1 uppercase">
+                                                        {item.category || 'UNTAGGED'} • {item.sku || 'NO SKU'}
+                                                    </p>
                                                 </div>
                                                 <div className="text-right flex-shrink-0">
                                                     <p className="text-sm md:text-base text-orange-600 font-black">₱{item.price_per_unit}</p>
-                                                    <p className="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Stock: <span className={item.current_stock <= (item.re_order_level || 5) ? 'text-red-500' : 'text-gray-600'}>{item.current_stock}</span></p>
+                                                    <p className="text-[9px] font-bold text-gray-400 tracking-widest uppercase mt-0.5">Stock: <span className={item.current_stock <= (item.re_order_level || 5) ? 'text-red-500' : 'text-gray-600'}>{item.current_stock}</span></p>
                                                 </div>
                                             </div>
                                         ))
@@ -212,7 +218,9 @@ export default function Sales() {
                             {selectedItem && (
                                 <div className="p-6 md:p-8 bg-gray-900 rounded-[1.5rem] md:rounded-[2rem] border border-gray-800 flex justify-between items-center text-white shadow-xl">
                                     <div className="space-y-1 min-w-0 pr-2">
-                                        <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">{selectedItem.product_name}</p>
+                                        <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest truncate">
+                                            {selectedItem.product_name} [{selectedItem.unit || '-'}]
+                                        </p>
                                         <p className="text-xl md:text-2xl font-black text-orange-500">₱{selectedItem.price_per_unit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                                     </div>
                                     <ArrowRight className="text-gray-600 mx-2 flex-shrink-0" size={24} />
@@ -265,8 +273,12 @@ export default function Sales() {
                             {inventory.map(item => (
                                 <div key={item.id} className="flex justify-between items-center p-3 md:p-4 rounded-xl md:rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
                                     <div className="truncate pr-3 min-w-0">
-                                        <p className="font-bold text-xs md:text-sm truncate uppercase tracking-tight">{item.product_name}</p>
-                                        <p className="text-[8px] md:text-[9px] text-gray-500 uppercase font-black mt-1 tracking-widest truncate">{item.sku}</p>
+                                        <p className="font-bold text-xs md:text-sm truncate uppercase tracking-tight">
+                                            {item.product_name}
+                                        </p>
+                                        <p className="text-[8px] md:text-[9px] text-gray-500 uppercase font-black mt-1 tracking-widest truncate">
+                                            {item.unit || '-'} • {item.category || 'UNTAGGED'}
+                                        </p>
                                     </div>
                                     <div className="text-right flex-shrink-0">
                                         <p className={`font-black text-sm md:text-base ${item.current_stock <= (item.re_order_level || 5) ? 'text-red-500 animate-pulse' : 'text-green-500'}`}>
