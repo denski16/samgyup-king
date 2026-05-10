@@ -97,12 +97,13 @@ export default function SalesReport() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <AdminSidebar />
 
-            <main className="flex-1 p-4 pt-20 md:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: Keeps pt-24 until xl: breakpoint where sidebar docks */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
                 {/* --- HEADER --- */}
                 <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 md:mb-10 gap-6">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight">Sales Report</h1>
-                        <p className="text-sm md:text-base text-gray-500 font-medium italic">Performance overview for {activeBranch}.</p>
+                        <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Performance overview for {activeBranch}.</p>
                     </div>
 
                     <div className="flex gap-3 w-full xl:w-auto">
@@ -116,13 +117,13 @@ export default function SalesReport() {
                 </header>
 
                 {/* --- FILTERS SECTION --- */}
-                <div className="flex flex-col lg:flex-row gap-6 items-stretch lg:items-end mb-8 bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+                <div className="flex flex-col lg:flex-row gap-6 items-stretch lg:items-end mb-8 bg-white p-6 md:p-8 xl:p-10 rounded-[2rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm">
                     <div className="flex-1">
                         <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 ml-1 tracking-widest">Branch Scope</label>
-                        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl overflow-x-auto custom-scrollbar">
+                        <div className="flex gap-1 bg-gray-100 p-1.5 rounded-2xl overflow-x-auto custom-scrollbar">
                             {branches.map((br) => (
                                 <button key={br} onClick={() => setActiveBranch(br)}
-                                    className={`px-4 py-2 rounded-lg text-[9px] font-black transition-all whitespace-nowrap flex-1 ${activeBranch === br ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                                    className={`px-4 py-2.5 rounded-xl text-[9px] md:text-[10px] font-black transition-all whitespace-nowrap flex-1 ${activeBranch === br ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                                     {br}
                                 </button>
                             ))}
@@ -132,13 +133,13 @@ export default function SalesReport() {
                     <div className="flex flex-col sm:flex-row gap-4 items-end">
                         <div className="w-full sm:w-auto">
                             <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 ml-1 tracking-widest">Start Date</label>
-                            <input type="date" className="w-full bg-gray-100 border-none p-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                            <input type="date" className="w-full bg-gray-100 border-none p-3.5 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
                         </div>
                         <div className="w-full sm:w-auto">
                             <label className="block text-[10px] font-black text-gray-400 uppercase mb-2 ml-1 tracking-widest">End Date</label>
-                            <input type="date" className="w-full bg-gray-100 border-none p-3 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                            <input type="date" className="w-full bg-gray-100 border-none p-3.5 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
                         </div>
-                        <button onClick={() => { setStartDate(''); setEndDate(''); }} className="p-3 text-gray-400 hover:text-orange-600 transition-colors bg-gray-100 rounded-xl">
+                        <button onClick={() => { setStartDate(''); setEndDate(''); }} className="p-3.5 text-gray-400 hover:text-orange-600 transition-colors bg-gray-100 rounded-xl">
                             <RefreshCcw size={18} />
                         </button>
                     </div>
@@ -146,19 +147,19 @@ export default function SalesReport() {
 
                 {/* --- ANALYTICS CARDS --- */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
-                    <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 relative group overflow-hidden">
+                    <div className="bg-white p-6 md:p-8 xl:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 relative group overflow-hidden">
                         <TrendingUp size={48} className="absolute top-6 right-6 text-orange-50 group-hover:text-orange-100 transition-colors" />
                         <p className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Gross Revenue</p>
                         <p className="text-2xl md:text-3xl font-black text-gray-900">₱{totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                     </div>
 
-                    <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 relative group overflow-hidden">
+                    <div className="bg-white p-6 md:p-8 xl:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 relative group overflow-hidden">
                         <Package size={48} className="absolute top-6 right-6 text-blue-50 group-hover:text-blue-100 transition-colors" />
                         <p className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Inventory Outflow</p>
                         <p className="text-2xl md:text-3xl font-black text-gray-900">{totalUnits.toLocaleString()}</p>
                     </div>
 
-                    <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 relative group overflow-hidden sm:col-span-2 lg:col-span-1">
+                    <div className="bg-white p-6 md:p-8 xl:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 relative group overflow-hidden sm:col-span-2 lg:col-span-1">
                         <Banknote size={48} className="absolute top-6 right-6 text-green-50 group-hover:text-green-100 transition-colors" />
                         <p className="text-[10px] font-black text-gray-400 uppercase mb-1 tracking-widest">Avg. Transaction</p>
                         <p className="text-2xl md:text-3xl font-black text-gray-900">₱{averageTicket.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
@@ -167,7 +168,7 @@ export default function SalesReport() {
 
                 {/* --- TRANSACTION TABLE --- */}
                 <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden w-full">
-                    <div className="p-6 md:p-8 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50/50 gap-2">
+                    <div className="p-6 md:p-8 xl:p-10 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-gray-50/50 gap-2">
                         <h3 className="font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-2 text-gray-900">
                             <Calendar size={18} className="text-orange-500" /> Transaction Ledger
                         </h3>
@@ -180,11 +181,11 @@ export default function SalesReport() {
                         <table className="w-full text-left border-collapse min-w-[900px]">
                             <thead className="bg-gray-900 text-white text-[9px] md:text-[10px] uppercase tracking-[0.2em]">
                                 <tr>
-                                    <th className="p-4 md:p-6">Timestamp</th>
-                                    <th className="p-4 md:p-6">Item Description</th>
-                                    <th className="p-4 md:p-6 text-center">Branch</th>
-                                    <th className="p-4 md:p-6 text-center">Qty</th>
-                                    <th className="p-4 md:p-6 text-right">Revenue</th>
+                                    <th className="p-4 md:p-6 xl:p-8">Timestamp</th>
+                                    <th className="p-4 md:p-6 xl:p-8">Item Description</th>
+                                    <th className="p-4 md:p-6 xl:p-8 text-center">Branch</th>
+                                    <th className="p-4 md:p-6 xl:p-8 text-center">Qty</th>
+                                    <th className="p-4 md:p-6 xl:p-8 text-right">Revenue</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 text-xs md:text-sm">
@@ -195,17 +196,17 @@ export default function SalesReport() {
                                 ) : (
                                     salesData.map((sale) => (
                                         <tr key={sale.id} className="hover:bg-orange-50/20 transition-colors">
-                                            <td className="p-4 md:p-6 text-[10px] md:text-xs text-gray-400 font-medium">
+                                            <td className="p-4 md:p-6 xl:p-8 text-[10px] md:text-xs text-gray-400 font-medium">
                                                 {new Date(sale.sale_date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
                                             </td>
-                                            <td className="p-4 md:p-6 font-black uppercase text-gray-800 tracking-tight">{sale.product_name}</td>
-                                            <td className="p-4 md:p-6 text-center">
+                                            <td className="p-4 md:p-6 xl:p-8 font-black uppercase text-gray-800 tracking-tight">{sale.product_name}</td>
+                                            <td className="p-4 md:p-6 xl:p-8 text-center">
                                                 <span className="px-3 py-1 bg-gray-100 rounded-lg text-[9px] font-black uppercase text-gray-500 border border-gray-200">
                                                     {sale.branch}
                                                 </span>
                                             </td>
-                                            <td className="p-4 md:p-6 text-center font-bold text-gray-700">{sale.quantity_sold}</td>
-                                            <td className="p-4 md:p-6 text-right font-black text-orange-600 italic">₱{Number(sale.total_price).toFixed(2)}</td>
+                                            <td className="p-4 md:p-6 xl:p-8 text-center font-bold text-gray-700">{sale.quantity_sold}</td>
+                                            <td className="p-4 md:p-6 xl:p-8 text-right font-black text-orange-600 italic">₱{Number(sale.total_price).toFixed(2)}</td>
                                         </tr>
                                     ))
                                 )}

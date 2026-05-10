@@ -10,7 +10,8 @@ import {
     AlertTriangle,
     BarChart2,
     CalendarDays,
-    LineChart
+    LineChart,
+    Wallet // Added for Profit Card
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
@@ -19,8 +20,8 @@ export default function Dashboard() {
     const [filter, setFilter] = useState('Daily');
     const [loading, setLoading] = useState(true);
 
-    // Stats State
-    const [stats, setStats] = useState({ revenue: 0, transactions: 0, itemsSold: 0 });
+    // Stats State - Added Profit
+    const [stats, setStats] = useState({ revenue: 0, profit: 0, transactions: 0, itemsSold: 0 });
     const [topProducts, setTopProducts] = useState([]);
     const [branchData, setBranchData] = useState([]);
     const [criticalStock, setCriticalStock] = useState([]);
@@ -101,8 +102,12 @@ export default function Dashboard() {
                 return d >= filterStartDate;
             });
 
+            const totalRevenue = filteredSales.reduce((acc, s) => acc + Number(s.total_price), 0);
+
             setStats({
-                revenue: filteredSales.reduce((acc, s) => acc + Number(s.total_price), 0),
+                revenue: totalRevenue,
+                // PROFIT FORMULA: Change the '0.35' below to whatever your margin is, or calculate based on cost per item if available!
+                profit: totalRevenue * 0.35,
                 transactions: filteredSales.length,
                 itemsSold: filteredSales.reduce((acc, s) => acc + Number(s.quantity_sold), 0)
             });
@@ -161,11 +166,12 @@ export default function Dashboard() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <AdminSidebar />
 
-            <main className="flex-1 p-4 pt-20 md:p-8 w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: pt-24 provides clearance for mobile menu up to xl: */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 w-full max-w-[100vw] overflow-x-hidden">
                 <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 md:mb-10 gap-6">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight">DASHBOARD OVERVIEW</h1>
-                        <p className="text-sm md:text-base text-gray-500 font-medium italic">Global Business Intelligence</p>
+                        <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Global Business Intelligence</p>
                     </div>
 
                     <div className="flex items-center gap-3 w-full xl:w-auto">
@@ -177,24 +183,25 @@ export default function Dashboard() {
                                 </button>
                             ))}
                         </div>
-                        <button onClick={fetchDashboardData} className="p-3 bg-white border border-gray-200 rounded-2xl hover:text-orange-500 shadow-sm transition-all active:scale-90">
+                        <button onClick={fetchDashboardData} className="p-3 md:p-3.5 bg-white border border-gray-200 rounded-2xl md:rounded-xl hover:text-orange-500 shadow-sm transition-all active:scale-90">
                             <RefreshCcw size={18} className={loading ? "animate-spin text-orange-600" : ""} />
                         </button>
                     </div>
                 </header>
 
-                {/* SUMMARY CARDS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
-                    <Card icon={<TrendingUp />} label="Total Revenue" value={`₱${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="orange" footer={`${filter} Performance`} />
+                {/* SUMMARY CARDS - lg:grid-cols-4 makes them single row on 1180px iPad */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                    <Card icon={<TrendingUp />} label="Total Revenue" value={`₱${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="orange" footer={`${filter} Sales`} />
+                    <Card icon={<Wallet />} label="Net Profit (Est)" value={`₱${stats.profit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="green" footer={`${filter} Return`} />
                     <Card icon={<ShoppingBag />} label="Transactions" value={stats.transactions.toLocaleString()} color="blue" footer="Orders Logged" />
-                    <Card icon={<Package />} label="Items Sold" value={stats.itemsSold.toLocaleString()} color="green" footer="Units Dispatched" spanMobile />
+                    <Card icon={<Package />} label="Items Sold" value={stats.itemsSold.toLocaleString()} color="gray" footer="Units Dispatched" />
                 </div>
 
                 {/* MAIN GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
                     <div className="lg:col-span-2 space-y-6 md:space-y-8">
                         {/* Active Chart */}
-                        <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 text-white shadow-2xl relative overflow-hidden">
+                        <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 text-white shadow-2xl relative overflow-hidden">
                             <div className="flex justify-between items-center mb-8 relative z-10">
                                 <h3 className="text-sm md:text-lg font-black uppercase tracking-widest flex items-center gap-2">
                                     <BarChart2 className="text-orange-500" /> Branch Comparison
@@ -216,7 +223,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Critical Stock */}
-                        <div className="bg-red-50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 border border-red-100">
+                        <div className="bg-red-50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 border border-red-100">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-sm md:text-lg font-black uppercase tracking-widest text-red-900 flex items-center gap-2"><AlertTriangle className="text-red-500" /> Critical Stock</h3>
                                 <span className="bg-red-600 text-white text-[9px] px-3 py-1 rounded-full font-black">{criticalStock.length} Items</span>
@@ -236,8 +243,8 @@ export default function Dashboard() {
                     </div>
 
                     {/* Top Sellers */}
-                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col h-full">
-                        <h3 className="text-sm md:text-lg font-black uppercase tracking-widest mb-8 text-gray-900 flex justify-between items-center">Top Sellers <span className="text-[9px] text-gray-400">By Qty</span></h3>
+                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-sm border border-gray-100 flex flex-col h-full">
+                        <h3 className="text-sm md:text-lg font-black uppercase tracking-widest mb-8 text-gray-900 flex justify-between items-center">Top Sellers <span className="text-[9px] text-gray-400 bg-gray-100 px-2 py-1 rounded-md">By Qty</span></h3>
                         <div className="flex-1 flex flex-col justify-center space-y-6">
                             {topProducts.length > 0 ? topProducts.map((p, i) => (
                                 <div key={i} className="relative">
@@ -258,7 +265,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* MATRIX SECTION */}
-                <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-gray-100 overflow-hidden mb-8">
+                <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-sm border border-gray-100 overflow-hidden mb-8">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><LineChart size={24} /></div>
                         <div>
@@ -318,19 +325,21 @@ export default function Dashboard() {
 }
 
 // Reusable Helper Component for the Top Cards
-function Card({ icon, label, value, color, footer, spanMobile }) {
+function Card({ icon, label, value, color, footer }) {
     const colorClasses = {
         orange: "text-orange-50 group-hover:text-orange-100",
         blue: "text-blue-50 group-hover:text-blue-100",
-        green: "text-green-50 group-hover:text-green-100"
+        green: "text-green-50 group-hover:text-green-100",
+        gray: "text-gray-50 group-hover:text-gray-100" // Added for the 4th card
     };
     return (
-        <div className={`bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-gray-100 relative overflow-hidden group ${spanMobile ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
+        // Removed the spanMobile logic here since we want them all side-by-side on lg screens anyway
+        <div className={`bg-white p-5 md:p-6 lg:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 relative overflow-hidden group`}>
             <div className={`absolute top-0 right-0 p-6 transition-colors ${colorClasses[color]}`}>{icon}</div>
-            <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{label}</p>
-            <p className="text-2xl md:text-3xl font-black text-gray-900">{value}</p>
-            <div className="mt-4 text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                {color === 'orange' && <ArrowUpRight size={14} className="text-green-600" />} {footer}
+            <p className="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{label}</p>
+            <p className="text-xl md:text-2xl font-black text-gray-900">{value}</p>
+            <div className="mt-4 text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                {(color === 'orange' || color === 'green') && <ArrowUpRight size={14} className="text-green-600" />} {footer}
             </div>
         </div>
     );

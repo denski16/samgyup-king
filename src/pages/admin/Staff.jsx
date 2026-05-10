@@ -194,8 +194,8 @@ export default function Staff() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <AdminSidebar />
 
-            {/* RESPONSIVE UPGRADE: pt-20 for menu clearance, p-4 on mobile */}
-            <main className="flex-1 p-4 pt-20 md:p-8 w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: Keeps pt-24 until xl: breakpoint where sidebar docks */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 w-full max-w-[100vw] overflow-x-hidden">
 
                 {/* RESPONSIVE HEADER */}
                 <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-10 gap-4">
@@ -203,7 +203,7 @@ export default function Staff() {
                         <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900 italic">
                             staff <span className="text-orange-600 font-black">management</span>
                         </h1>
-                        <p className="text-sm md:text-base text-gray-500 font-medium italic">Manage branch assignments and portal access.</p>
+                        <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Manage branch assignments and portal access.</p>
                     </div>
                     {/* Full width button on mobile */}
                     <button onClick={openAddModal} className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700 text-white px-6 py-4 rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-orange-900/20 transition-all active:scale-95">
@@ -217,12 +217,12 @@ export default function Staff() {
                         <table className="w-full text-left border-collapse min-w-[900px]">
                             <thead className="bg-gray-900 text-white text-[9px] md:text-[10px] uppercase tracking-[0.2em]">
                                 <tr>
-                                    <th className="p-4 md:p-6">Full Name</th>
-                                    <th className="p-4 md:p-6">Role</th>
-                                    <th className="p-4 md:p-6">Branches</th>
-                                    <th className="p-4 md:p-6">Email / Login</th>
-                                    <th className="p-4 md:p-6 text-center">Status</th>
-                                    <th className="p-4 md:p-6 text-center">Actions</th>
+                                    <th className="p-4 md:p-6 xl:p-8">Full Name</th>
+                                    <th className="p-4 md:p-6 xl:p-8">Role</th>
+                                    <th className="p-4 md:p-6 xl:p-8">Branches</th>
+                                    <th className="p-4 md:p-6 xl:p-8">Email / Login</th>
+                                    <th className="p-4 md:p-6 xl:p-8 text-center">Status</th>
+                                    <th className="p-4 md:p-6 xl:p-8 text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100 text-xs md:text-sm">
@@ -231,29 +231,29 @@ export default function Staff() {
                                 ) : (
                                     staff.map((member) => (
                                         <tr key={member.id} className="hover:bg-orange-50/20 transition-colors group">
-                                            <td className="p-4 md:p-6">
+                                            <td className="p-4 md:p-6 xl:p-8">
                                                 <p className="font-black text-gray-900 uppercase tracking-tight">{member.first_name} {member.last_name}</p>
                                                 <p className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase">{member.contact_number || 'No Contact'}</p>
                                             </td>
-                                            <td className="p-4 md:p-6">
+                                            <td className="p-4 md:p-6 xl:p-8">
                                                 <span className={`text-[9px] md:text-[10px] font-black uppercase px-2 py-1 rounded border ${member.role?.toLowerCase() === 'admin' ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-gray-200 text-gray-500'}`}>
                                                     {member.role}
                                                 </span>
                                             </td>
-                                            <td className="p-4 md:p-6">
+                                            <td className="p-4 md:p-6 xl:p-8">
                                                 <div className="flex flex-wrap gap-1">
                                                     {member.branches?.map(b => (
                                                         <span key={b} className="bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-[8px] md:text-[9px] font-black uppercase border border-gray-200 whitespace-nowrap">{b}</span>
                                                     ))}
                                                 </div>
                                             </td>
-                                            <td className="p-4 md:p-6 text-gray-500 font-bold">{member.email}</td>
-                                            <td className="p-4 md:p-6 text-center">
+                                            <td className="p-4 md:p-6 xl:p-8 text-gray-500 font-bold">{member.email}</td>
+                                            <td className="p-4 md:p-6 xl:p-8 text-center">
                                                 <span className={`px-3 py-1 rounded-full font-black text-[8px] md:text-[9px] uppercase tracking-wider ${member.status === 'Active' ? 'bg-green-500 text-white shadow-sm' : 'bg-gray-400 text-white'}`}>
                                                     {member.status}
                                                 </span>
                                             </td>
-                                            <td className="p-4 md:p-6 text-center">
+                                            <td className="p-4 md:p-6 xl:p-8 text-center">
                                                 <div className="flex justify-center gap-2">
                                                     <button onClick={() => openEditModal(member)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Pencil size={14} /></button>
                                                     <button onClick={() => triggerDelete(member.id)} className="p-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all shadow-sm"><Trash2 size={14} /></button>
@@ -285,7 +285,7 @@ export default function Staff() {
             {/* --- FORM MODAL --- */}
             {showModal && (
                 <div className="fixed inset-0 z-[160] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4">
-                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 w-full max-w-xl shadow-2xl overflow-y-auto max-h-[95vh] custom-scrollbar">
+                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 w-full max-w-xl shadow-2xl overflow-y-auto max-h-[95vh] custom-scrollbar">
                         <div className="flex justify-between items-center mb-8">
                             <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-2">
                                 <Users className="text-orange-600" /> {isEditing ? 'Update User' : 'New Registration'}
@@ -304,7 +304,7 @@ export default function Staff() {
                                 <h3 className="text-[10px] font-black uppercase tracking-widest text-orange-600">Branch Assignments</h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     {branchOptions.map(branch => (
-                                        <button key={branch} type="button" onClick={() => toggleBranch(branch)} className={`p-3 rounded-xl border-2 flex items-center justify-between transition-all ${formData.branches.includes(branch) ? 'bg-orange-50 border-orange-500 text-orange-700 font-black' : 'bg-white border-gray-100 text-gray-400 font-bold'}`}>
+                                        <button key={branch} type="button" onClick={() => toggleBranch(branch)} className={`p-3 rounded-xl border-2 flex items-center justify-between transition-all ${formData.branches.includes(branch) ? 'bg-orange-50 border-orange-500 text-orange-700 font-black' : 'bg-white border-gray-100 text-gray-400 font-bold hover:border-gray-300'}`}>
                                             <span className="text-[9px] uppercase">{branch}</span>
                                             {formData.branches.includes(branch) && <Check size={14} />}
                                         </button>
@@ -338,15 +338,15 @@ export default function Staff() {
             {/* --- AUTH MODAL --- */}
             {showAuthModal && (
                 <div className="fixed inset-0 z-[170] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 text-white">
-                    <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 w-full max-w-sm border border-white/10 text-center">
+                    <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 xl:p-12 w-full max-w-sm border border-white/10 text-center">
                         <ShieldCheck size={48} className="mx-auto mb-6 text-orange-500" />
                         <h2 className="text-lg md:text-xl font-black uppercase tracking-tight text-white mb-2">Authorization</h2>
                         <p className="text-gray-400 text-xs mb-8 italic">Verify manager password.</p>
                         <form onSubmit={handleFinalSubmit} className="space-y-4">
-                            <input required autoFocus type="password" placeholder="Password" className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none font-bold text-white focus:border-orange-500 text-center" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} />
+                            <input required autoFocus type="password" placeholder="Password" className="w-full bg-white/5 border border-white/10 p-4 rounded-2xl outline-none font-bold text-white focus:border-orange-500 text-center transition-all" value={managerPassword} onChange={(e) => setManagerPassword(e.target.value)} />
                             <div className="flex gap-3">
-                                <button type="button" onClick={() => setShowAuthModal(false)} className="flex-1 py-4 bg-white/5 rounded-xl font-bold uppercase text-[9px] text-white">Cancel</button>
-                                <button type="submit" disabled={loading} className="flex-1 py-4 bg-orange-600 rounded-xl font-black uppercase text-[9px] text-white">
+                                <button type="button" onClick={() => setShowAuthModal(false)} className="flex-1 py-4 bg-white/5 hover:bg-white/10 rounded-xl font-bold uppercase text-[9px] text-white transition-colors">Cancel</button>
+                                <button type="submit" disabled={loading} className="flex-1 py-4 bg-orange-600 hover:bg-orange-700 rounded-xl font-black uppercase text-[9px] text-white transition-colors disabled:opacity-50">
                                     {loading ? '...' : 'Verify'}
                                 </button>
                             </div>
@@ -357,14 +357,14 @@ export default function Staff() {
 
             {/* --- DELETE MODAL --- */}
             {showDeleteModal && (
-                <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/60 p-4 text-gray-900">
-                    <div className="bg-white rounded-[2rem] p-8 w-full max-w-sm shadow-2xl text-center">
+                <div className="fixed inset-0 z-[180] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-gray-900">
+                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 w-full max-w-sm shadow-2xl text-center">
                         <Trash2 size={32} className="mx-auto mb-4 text-red-500" />
-                        <h3 className="text-lg md:text-xl font-black mb-2">Remove Staff?</h3>
+                        <h3 className="text-lg md:text-xl font-black uppercase tracking-tight mb-2">Remove Staff?</h3>
                         <p className="text-gray-500 mb-6 text-xs font-medium italic">Action cannot be undone.</p>
                         <div className="flex gap-3">
-                            <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-3 bg-gray-100 font-bold rounded-xl text-gray-900 text-xs">Cancel</button>
-                            <button onClick={confirmDelete} className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl text-xs">Remove</button>
+                            <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 font-black uppercase tracking-widest rounded-xl text-gray-900 text-[10px] transition-colors">Cancel</button>
+                            <button onClick={confirmDelete} className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest rounded-xl text-[10px] shadow-lg shadow-red-900/20 transition-all">Remove</button>
                         </div>
                     </div>
                 </div>
@@ -372,12 +372,12 @@ export default function Staff() {
 
             {/* --- ERROR MODAL --- */}
             {showErrorModal && (
-                <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/60 p-4 text-gray-900">
-                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-8 w-full max-w-sm shadow-2xl text-center border-t-8 border-red-500">
+                <div className="fixed inset-0 z-[190] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 text-gray-900">
+                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-8 md:p-10 w-full max-w-sm shadow-2xl text-center border-t-8 border-red-500">
                         <AlertCircle size={32} className="mx-auto mb-4 text-red-600" />
                         <h3 className="text-lg md:text-xl font-black uppercase tracking-tight mb-2 text-red-600">Failed</h3>
                         <p className="text-gray-500 mb-6 text-xs font-bold italic">Incorrect password.</p>
-                        <button onClick={() => { setShowErrorModal(false); setShowAuthModal(true); }} className="w-full py-4 bg-gray-900 text-white font-black uppercase text-xs tracking-widest rounded-xl">Retry</button>
+                        <button onClick={() => { setShowErrorModal(false); setShowAuthModal(true); }} className="w-full py-4 bg-gray-900 hover:bg-black text-white font-black uppercase text-xs tracking-widest rounded-xl transition-all">Retry</button>
                     </div>
                 </div>
             )}
@@ -387,8 +387,8 @@ export default function Staff() {
 
 function Requirement({ label, met }) {
     return (
-        <div className={`flex items-center gap-1.5 text-[8px] font-black uppercase ${met ? 'text-green-600' : 'text-gray-300'}`}>
-            <Check size={10} className={met ? 'opacity-100' : 'opacity-20'} /> {label}
+        <div className={`flex items-center gap-1.5 text-[8px] font-black uppercase transition-colors ${met ? 'text-green-600' : 'text-gray-400'}`}>
+            <Check size={10} className={`transition-opacity ${met ? 'opacity-100' : 'opacity-30'}`} /> {label}
         </div>
     );
 }

@@ -105,7 +105,7 @@ export default function StaffSidebar() {
 
     return (
         <>
-            {/* --- MOBILE TOP-LEFT MENU BUTTON (Changed to xl:hidden) --- */}
+            {/* --- MOBILE TOP-LEFT MENU BUTTON --- */}
             <button
                 onClick={() => setIsMobileMenuOpen(true)}
                 className="xl:hidden fixed top-5 left-5 z-[130] p-3 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-md hover:text-orange-600 active:scale-95 transition-all"
@@ -113,7 +113,7 @@ export default function StaffSidebar() {
                 <Menu size={24} />
             </button>
 
-            {/* --- MOBILE BACKDROP (Changed to xl:hidden) --- */}
+            {/* --- MOBILE BACKDROP --- */}
             {isMobileMenuOpen && (
                 <div
                     className="xl:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[140] transition-opacity"
@@ -121,11 +121,11 @@ export default function StaffSidebar() {
                 />
             )}
 
-            {/* --- SIDEBAR (Changed from lg: to xl: breakpoints) --- */}
-            <aside className={`fixed inset-y-0 left-0 z-[150] w-64 bg-gray-900 text-white flex flex-col h-screen shadow-2xl border-r border-white/5 transform transition-transform duration-300 ease-in-out xl:translate-x-0 xl:sticky xl:top-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            {/* --- SIDEBAR: Changed h-screen to h-[100dvh] --- */}
+            <aside className={`fixed inset-y-0 left-0 z-[150] w-64 bg-gray-900 text-white flex flex-col h-[100dvh] shadow-2xl border-r border-white/5 transform transition-transform duration-300 ease-in-out xl:translate-x-0 xl:sticky xl:top-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
 
                 <div className="p-8 border-b border-gray-800 relative">
-                    {/* Mobile Close Button (Changed to xl:hidden) */}
+                    {/* Mobile Close Button */}
                     <button
                         onClick={() => setIsMobileMenuOpen(false)}
                         className="xl:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-white transition-colors rounded-lg bg-white/5 z-10"
@@ -151,8 +151,8 @@ export default function StaffSidebar() {
                     </div>
                 </div>
 
-                {/* --- NAV --- */}
-                <nav className="flex-1 p-4 space-y-2 mt-6 overflow-y-auto custom-scrollbar">
+                {/* --- NAV: Added min-h-0 so flexbox allows internal scrolling --- */}
+                <nav className="flex-1 p-4 space-y-2 mt-6 overflow-y-auto custom-scrollbar min-h-0">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
@@ -175,8 +175,8 @@ export default function StaffSidebar() {
                     })}
                 </nav>
 
-                {/* --- FOOTER --- */}
-                <div className="p-4 border-t border-gray-800 space-y-2">
+                {/* --- FOOTER: Added pb-8 for iPhone bottom bar clearance and shrink-0 --- */}
+                <div className="p-4 pb-8 md:pb-4 border-t border-gray-800 space-y-2 shrink-0">
                     <button
                         onClick={() => handleNavClick('/staff/settings')}
                         className={`w-full text-left p-4 rounded-xl flex items-center gap-4 text-xs font-bold uppercase tracking-widest transition-all ${isActive('/staff/settings') ? 'text-orange-500' : 'text-gray-500 hover:text-white'}`}

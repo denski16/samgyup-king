@@ -173,7 +173,8 @@ export default function Inventory() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <AdminSidebar />
 
-            <main className="flex-1 p-4 pt-20 md:p-8 w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: Keeps pt-24 until xl: breakpoint where sidebar docks */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 w-full max-w-[100vw] overflow-x-hidden">
                 <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900">Inventory</h1>
@@ -230,8 +231,8 @@ export default function Inventory() {
                                 key={cat}
                                 onClick={() => setActiveCategory(cat)}
                                 className={`px-4 py-2.5 rounded-xl text-[9px] md:text-[10px] font-black tracking-widest uppercase whitespace-nowrap transition-all ${activeCategory === cat
-                                        ? 'bg-gray-900 text-white shadow-md'
-                                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                                    ? 'bg-gray-900 text-white shadow-md'
+                                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                                     }`}
                             >
                                 {cat}

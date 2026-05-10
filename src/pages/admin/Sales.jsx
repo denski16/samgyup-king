@@ -52,7 +52,7 @@ export default function Sales() {
         const { data } = await supabase
             .from('inventory')
             .select('*')
-            .eq('branch', activeBranch) // <-- UPDATED to use the new 'branch' column
+            .eq('branch', activeBranch)
             .order('product_name', { ascending: true });
 
         setInventory(data || []);
@@ -110,7 +110,7 @@ export default function Sales() {
         if (invError || saleError) {
             alert("Transaction Failed!");
         } else {
-            // 3. Log Activity (Added the Unit to the log so it's clear what was sold)
+            // 3. Log Activity
             await supabase.from('activity_logs').insert([{
                 staff_name: adminName || 'Admin',
                 branch: activeBranch || 'Unknown Branch',
@@ -133,7 +133,8 @@ export default function Sales() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <AdminSidebar />
 
-            <main className="flex-1 p-4 pt-20 md:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: Keeps pt-24 until xl: breakpoint where sidebar docks */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
                 <header className="mb-6 md:mb-10">
                     <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900">SALES</h1>
                     <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Record sales to auto-deduct from {activeBranch} inventory.</p>
@@ -151,7 +152,7 @@ export default function Sales() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                     {/* LEFT: New Transaction Form */}
-                    <div className="lg:col-span-2 bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-gray-100 h-fit">
+                    <div className="lg:col-span-2 bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-sm border border-gray-100 h-fit">
                         <h2 className="text-lg md:text-xl font-black uppercase mb-6 md:mb-8 flex items-center gap-3 text-gray-900">
                             <ShoppingCart className="text-orange-500" size={24} /> New Transaction
                         </h2>
@@ -164,7 +165,7 @@ export default function Sales() {
 
                         <form onSubmit={handleProcessSale} className="space-y-6 md:space-y-8">
 
-                            {/* --- NEW SEARCHABLE PRODUCT SELECTOR --- */}
+                            {/* --- SEARCHABLE PRODUCT SELECTOR --- */}
                             <div className="space-y-3">
                                 <label className="block text-[9px] md:text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Search & Select Product</label>
 
@@ -178,7 +179,7 @@ export default function Sales() {
                                         className="w-full bg-gray-50 pl-12 pr-10 py-4 md:py-5 rounded-2xl md:rounded-3xl outline-none focus:ring-2 focus:ring-orange-500/20 border border-transparent focus:border-orange-500/50 font-bold text-xs md:text-sm transition-all"
                                     />
                                     {searchQuery && (
-                                        <button type="button" onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                        <button type="button" onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
                                             <X size={16} />
                                         </button>
                                     )}
@@ -231,7 +232,7 @@ export default function Sales() {
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-2 md:pt-4">
                                 <div className="space-y-3">
                                     <label className="block text-[9px] md:text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Quantity Sold</label>
                                     <input
@@ -259,7 +260,7 @@ export default function Sales() {
                     </div>
 
                     {/* RIGHT: Stock Check Sidebar */}
-                    <div className="lg:col-span-1 bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 text-white shadow-2xl h-fit w-full">
+                    <div className="lg:col-span-1 bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 text-white shadow-2xl h-fit w-full">
                         <div className="flex justify-between items-center mb-6 md:mb-8">
                             <h2 className="text-base md:text-lg font-black uppercase tracking-widest flex items-center gap-3">
                                 <AlertTriangle className="text-orange-500" size={24} /> Stock Check

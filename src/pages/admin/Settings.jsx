@@ -99,26 +99,27 @@ export default function Settings() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <AdminSidebar />
 
-            <main className="flex-1 p-4 pt-20 md:p-8 w-full max-w-[100vw] overflow-x-hidden">
-                <header className="mb-8 md:mb-10">
+            {/* RESPONSIVE UPGRADE: Keeps pt-24 until xl: breakpoint where sidebar docks */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 w-full max-w-[100vw] overflow-x-hidden">
+                <header className="mb-6 md:mb-10">
                     <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight">System Settings</h1>
-                    <p className="text-sm md:text-base text-gray-500 font-medium italic">Configure security and system parameters.</p>
+                    <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Configure security and system parameters.</p>
                 </header>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 max-w-5xl xl:max-w-6xl">
                     {/* Security Card */}
-                    <div className="bg-white rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-sm border border-gray-100 flex flex-col justify-between h-full">
                         <section>
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 mb-6 flex items-center gap-2">
-                                <ShieldCheck size={16} /> Account Security
+                            <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-orange-600 mb-6 flex items-center gap-2">
+                                <ShieldCheck size={18} /> Account Security
                             </h3>
                             <div className="mb-8">
-                                <p className="text-sm font-black text-gray-900 uppercase tracking-tight">Access Level: Manager</p>
-                                <p className="text-xs text-gray-500 font-medium italic mt-1">{adminProfile?.email}</p>
+                                <p className="text-sm md:text-base font-black text-gray-900 uppercase tracking-tight">Access Level: Manager</p>
+                                <p className="text-xs md:text-sm text-gray-500 font-medium italic mt-1">{adminProfile?.email}</p>
                             </div>
-                            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex gap-3 mb-8">
-                                <Info className="text-blue-600 shrink-0" size={18} />
-                                <p className="text-[10px] text-blue-700 font-bold uppercase leading-relaxed">
+                            <div className="p-4 md:p-5 bg-blue-50 rounded-2xl border border-blue-100 flex gap-3 mb-8">
+                                <Info className="text-blue-600 shrink-0 mt-0.5" size={18} />
+                                <p className="text-[10px] md:text-xs text-blue-700 font-bold uppercase leading-relaxed">
                                     Enforced security protocols require 8+ characters with mixed casing, numbers, and symbols.
                                 </p>
                             </div>
@@ -126,28 +127,28 @@ export default function Settings() {
 
                         <button
                             onClick={() => setShowPassModal(true)}
-                            className="w-full md:w-fit px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl shadow-gray-900/10"
+                            className="w-full md:w-fit px-8 py-4 bg-gray-900 text-white rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-orange-600 transition-all shadow-xl shadow-gray-900/10 active:scale-95"
                         >
                             Update Credentials
                         </button>
                     </div>
 
                     {/* System Info Card */}
-                    <div className="bg-gray-900 rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden flex flex-col justify-between">
-                        <Cpu size={120} className="absolute -bottom-10 -right-10 text-white/5 rotate-12" />
-                        <section>
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 mb-6 flex items-center gap-2">
-                                <RefreshCcw size={16} /> System Status
+                    <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-2xl relative overflow-hidden flex flex-col justify-between h-full">
+                        <Cpu size={140} className="absolute -bottom-10 -right-10 text-white/5 rotate-12" />
+                        <section className="relative z-10">
+                            <h3 className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em] text-orange-500 mb-6 flex items-center gap-2">
+                                <RefreshCcw size={18} /> System Status
                             </h3>
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Version</p>
-                                    <p className="text-white font-black text-lg">2.0.5 (Secured)</p>
+                                    <p className="text-[10px] md:text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Version</p>
+                                    <p className="text-white font-black text-lg md:text-xl">2.0.5 (Secured)</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Database</p>
-                                    <p className="text-green-500 font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                                        <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" /> Manila Central Node
+                                    <p className="text-[10px] md:text-xs font-black text-gray-500 uppercase tracking-widest mb-1">Database</p>
+                                    <p className="text-green-500 font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]" /> Manila Central Node
                                     </p>
                                 </div>
                             </div>
@@ -158,31 +159,31 @@ export default function Settings() {
                 {/* --- SECURE PASSWORD MODAL --- */}
                 {showPassModal && (
                     <div className="fixed inset-0 z-[160] flex items-center justify-center bg-gray-950/60 backdrop-blur-md p-4">
-                        <div className="bg-white rounded-[2.5rem] p-6 md:p-10 w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
+                        <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh] custom-scrollbar">
                             <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-xl font-black uppercase tracking-tight flex items-center gap-2 text-gray-900">
+                                <h2 className="text-xl md:text-2xl font-black uppercase tracking-tight flex items-center gap-2 text-gray-900">
                                     <Lock className="text-orange-600" /> Secure Update
                                 </h2>
-                                <button onClick={() => setShowPassModal(false)} className="text-gray-400 hover:text-gray-900"><X size={24} /></button>
+                                <button onClick={() => setShowPassModal(false)} className="text-gray-400 hover:text-gray-900 transition-colors"><X size={24} /></button>
                             </div>
 
                             {status.msg && (
-                                <div className={`mb-6 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-3 ${status.type === 'success' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
-                                    {status.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+                                <div className={`mb-6 p-4 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest flex items-center gap-3 ${status.type === 'success' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                                    {status.type === 'success' ? <Check size={18} className="shrink-0" /> : <AlertCircle size={18} className="shrink-0" />}
                                     {status.msg}
                                 </div>
                             )}
 
-                            <form onSubmit={handleUpdatePassword} className="space-y-4">
+                            <form onSubmit={handleUpdatePassword} className="space-y-4 md:space-y-5">
                                 {/* Current Password */}
                                 <div>
-                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1">Current Password</label>
+                                    <label className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest mb-1 block">Current Password</label>
                                     <div className="relative">
                                         <input
                                             required
                                             type={showCurrent ? "text" : "password"}
                                             placeholder="••••••••"
-                                            className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm pr-12"
+                                            className="w-full bg-gray-50 p-4 md:p-5 rounded-xl md:rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm md:text-base pr-12 transition-all border border-transparent focus:border-orange-200"
                                             value={passwords.current}
                                             onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
                                         />
@@ -191,20 +192,20 @@ export default function Settings() {
                                             onClick={() => setShowCurrent(!showCurrent)}
                                             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors"
                                         >
-                                            {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            {showCurrent ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
                                     </div>
                                 </div>
 
                                 {/* New Password */}
                                 <div>
-                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1">New Strong Password</label>
+                                    <label className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest mb-1 block">New Strong Password</label>
                                     <div className="relative">
                                         <input
                                             required
                                             type={showNew ? "text" : "password"}
                                             placeholder="••••••••"
-                                            className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm pr-12"
+                                            className="w-full bg-gray-50 p-4 md:p-5 rounded-xl md:rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm md:text-base pr-12 transition-all border border-transparent focus:border-orange-200"
                                             value={passwords.new}
                                             onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
                                         />
@@ -213,11 +214,11 @@ export default function Settings() {
                                             onClick={() => setShowNew(!showNew)}
                                             className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500 transition-colors"
                                         >
-                                            {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+                                            {showNew ? <EyeOff size={20} /> : <Eye size={20} />}
                                         </button>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-2 mt-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                                    <div className="grid grid-cols-2 gap-2 mt-3 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                                         <Requirement label="8+ Chars" met={requirements.length} />
                                         <Requirement label="Uppercase" met={requirements.upper} />
                                         <Requirement label="Number" met={requirements.number} />
@@ -226,22 +227,22 @@ export default function Settings() {
                                 </div>
 
                                 <div>
-                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1">Confirm New Password</label>
+                                    <label className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase ml-1 tracking-widest mb-1 block">Confirm New Password</label>
                                     <input
                                         required
                                         type={showNew ? "text" : "password"}
                                         placeholder="••••••••"
-                                        className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm"
+                                        className="w-full bg-gray-50 p-4 md:p-5 rounded-xl md:rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm md:text-base transition-all border border-transparent focus:border-orange-200"
                                         value={passwords.confirm}
                                         onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
                                     />
-                                    {passwords.confirm && !passwordsMatch && <p className="text-[9px] text-red-500 font-black uppercase mt-1 ml-1">Passwords do not match</p>}
+                                    {passwords.confirm && !passwordsMatch && <p className="text-[9px] md:text-[10px] text-red-500 font-black uppercase mt-2 ml-1 tracking-widest">Passwords do not match</p>}
                                 </div>
 
                                 <button
                                     type="submit"
                                     disabled={loading || !isStrongEnough || !passwordsMatch}
-                                    className="w-full py-5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl mt-4 transition-all active:scale-95 disabled:opacity-30 disabled:grayscale"
+                                    className="w-full py-5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest text-[10px] md:text-xs rounded-2xl md:rounded-3xl shadow-xl mt-4 transition-all active:scale-95 disabled:opacity-30 disabled:grayscale"
                                 >
                                     {loading ? <RefreshCcw className="animate-spin mx-auto" size={20} /> : 'Save New Credentials'}
                                 </button>
@@ -256,8 +257,8 @@ export default function Settings() {
 
 function Requirement({ label, met }) {
     return (
-        <div className={`flex items-center gap-2 text-[8px] font-black uppercase ${met ? 'text-green-600' : 'text-gray-300 transition-colors'}`}>
-            <Check size={10} className={met ? 'opacity-100 scale-110' : 'opacity-20'} /> {label}
+        <div className={`flex items-center gap-2 text-[8px] md:text-[9px] font-black uppercase transition-colors tracking-widest ${met ? 'text-green-600' : 'text-gray-400'}`}>
+            <Check size={12} className={`transition-all ${met ? 'opacity-100 scale-110' : 'opacity-30'}`} /> {label}
         </div>
     );
 }

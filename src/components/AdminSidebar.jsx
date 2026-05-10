@@ -52,7 +52,7 @@ export default function AdminSidebar() {
             {/* --- Top-Left Mobile Menu Button --- */}
             <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden fixed top-5 left-5 z-[130] p-3 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-md hover:text-orange-600 hover:border-orange-200 active:scale-95 transition-all"
+                className="xl:hidden fixed top-5 left-5 z-[130] p-3 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-md hover:text-orange-600 hover:border-orange-200 active:scale-95 transition-all"
             >
                 <Menu size={24} />
             </button>
@@ -60,24 +60,24 @@ export default function AdminSidebar() {
             {/* Mobile Backdrop Overlay */}
             {isMobileMenuOpen && (
                 <div
-                    className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[140] transition-opacity"
+                    className="xl:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[140] transition-opacity"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
 
-            {/* SIDEBAR */}
-            <aside className={`fixed inset-y-0 left-0 z-[150] w-64 bg-gray-900 text-white flex flex-col h-screen shadow-2xl border-r border-white/5 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            {/* SIDEBAR: h-[100dvh] fixes the hidden bottom button issue on mobile browsers */}
+            <aside className={`fixed inset-y-0 left-0 z-[150] w-64 bg-gray-900 text-white flex flex-col h-[100dvh] shadow-2xl border-r border-white/5 transform transition-transform duration-300 ease-in-out xl:translate-x-0 xl:sticky xl:top-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
 
                 <div className="p-8 border-b border-gray-800 relative">
                     {/* Mobile Close Button inside Sidebar */}
                     <button
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="md:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-white transition-colors rounded-lg bg-white/5 z-10"
+                        className="xl:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-white transition-colors rounded-lg bg-white/5 z-10"
                     >
                         <X size={16} />
                     </button>
 
-                    {/* --- UPDATED BRANDING HEADER --- */}
+                    {/* --- BRANDING HEADER --- */}
                     <div
                         onClick={() => {
                             navigate('/admin/dashboard');
@@ -86,12 +86,10 @@ export default function AdminSidebar() {
                         className="flex items-center gap-3 cursor-pointer group mt-2"
                         title="Go to Dashboard"
                     >
-                        {/* REMOVED bg-white and p-1.5, slightly reduced w/h */}
                         <div className="w-10 h-10 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
                             <img src={logoImg} alt="Logo" className="w-full h-full object-contain" />
                         </div>
                         <div className="text-left transition-opacity duration-300 group-hover:opacity-80 min-w-0">
-                            {/* REDUCED text size to text-base to fit better */}
                             <span className="block text-base font-black tracking-tight text-orange-500 uppercase leading-none truncate">Samgyup King</span>
                             <span className="text-[8px] font-black text-gray-500 tracking-[0.2em] uppercase flex items-center gap-1 mt-1.5">
                                 <ShieldCheck size={10} className="text-green-500 flex-shrink-0" /> Admin Portal
@@ -100,7 +98,7 @@ export default function AdminSidebar() {
                     </div>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2 mt-6 overflow-y-auto custom-scrollbar">
+                <nav className="flex-1 p-4 space-y-2 mt-6 overflow-y-auto custom-scrollbar min-h-0">
                     {navItems.map((item) => {
                         const Icon = item.icon;
                         const active = isActive(item.path);
@@ -120,7 +118,8 @@ export default function AdminSidebar() {
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-gray-800 space-y-2">
+                {/* BOTTOM ACTIONS: Added pb-8 for mobile to clear the iPhone swipe bar */}
+                <div className="p-4 pb-8 md:pb-4 border-t border-gray-800 space-y-2 shrink-0">
                     <button
                         onClick={() => navigate('/admin/settings')}
                         className={`w-full text-left p-4 rounded-xl flex items-center gap-4 text-xs font-bold uppercase tracking-widest transition-all ${isActive('/admin/settings') ? 'text-orange-500' : 'text-gray-500 hover:text-white'}`}
