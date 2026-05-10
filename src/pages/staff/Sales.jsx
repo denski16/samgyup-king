@@ -7,7 +7,8 @@ import {
     CheckCircle,
     AlertTriangle,
     Store,
-    RefreshCcw
+    RefreshCcw,
+    Filter
 } from 'lucide-react';
 
 export default function Sales() {
@@ -21,6 +22,9 @@ export default function Sales() {
     const [selectedItem, setSelectedItem] = useState(null);
     const [qtySold, setQtySold] = useState(1);
     const [successMsg, setSuccessMsg] = useState('');
+
+    // --- NEW: Category Filter State ---
+    const [activeCategory, setActiveCategory] = useState('ALL');
 
     useEffect(() => {
         initializeStaffData();
@@ -57,10 +61,12 @@ export default function Sales() {
         const { data } = await supabase
             .from('inventory')
             .select('*')
-            .eq('category', activeBranch)
+            .eq('branch', activeBranch) // FIXED: Uses branch column now
+            .order('category', { ascending: true })
             .order('product_name', { ascending: true });
 
         setInventory(data || []);
+        setActiveCategory('ALL'); // Reset category when switching branches
         setSelectedItem(null);
         setQtySold(1);
         setFetchingInventory(false);
@@ -115,37 +121,68 @@ export default function Sales() {
         setLoading(false);
     }
 
+    // --- DYNAMIC CATEGORIES & FILTERING ---
+    const uniqueCategories = ['ALL', ...Array.from(new Set(inventory.map(item => item.category || 'UNTAGGED'))).sort()];
+
+    const filteredInventory = inventory.filter(item =>
+        activeCategory === 'ALL' || (item.category || 'UNTAGGED') === activeCategory
+    );
+
     return (
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <StaffSidebar />
 
-            {/* RESPONSIVE UPGRADE: Added pt-20 and mobile padding */}
-            <main className="flex-1 p-4 pt-20 md:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: Keeps pt-24 until xl: breakpoint where sidebar docks */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
                 <header className="mb-6 md:mb-8">
                     <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight">Daily Sales Entry</h1>
-                    <p className="text-sm md:text-base text-gray-500 font-medium italic">Record sales to auto-deduct from inventory.</p>
+                    <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Record manual sales to auto-deduct from inventory.</p>
                 </header>
 
-                {/* RESTRICTED Branch Selection - Responsive Scroll */}
+                {/* RESTRICTED Branch Selection & Category Filter Row */}
                 {userBranches.length === 0 ? (
                     <div className="mb-8 p-4 bg-red-50 text-red-600 rounded-2xl border border-red-100 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
                         <AlertTriangle size={18} /> No branches assigned.
                     </div>
                 ) : (
-                    <div className="flex gap-2 mb-8 bg-gray-200/50 p-1.5 rounded-2xl w-full md:w-fit items-center overflow-x-auto custom-scrollbar">
-                        <Store size={14} className="text-gray-400 ml-3 mr-1 shrink-0" />
-                        {userBranches.map((br) => (
-                            <button key={br} onClick={() => setActiveBranch(br)}
-                                className={`px-5 md:px-6 py-2.5 md:py-3 rounded-xl text-[9px] md:text-[10px] font-black tracking-[0.2em] transition-all whitespace-nowrap flex-1 md:flex-none ${activeBranch === br ? 'bg-white text-orange-600 shadow-md' : 'text-gray-500 hover:text-gray-900'}`}>
-                                {br}
-                            </button>
-                        ))}
+                    <div className="flex flex-col lg:flex-row gap-3 mb-8 shrink-0">
+                        <div className="flex items-center gap-2 bg-gray-200/50 p-1.5 rounded-2xl w-full lg:w-fit overflow-x-auto custom-scrollbar shrink-0">
+                            <Store size={14} className="text-gray-400 ml-3 mr-1 shrink-0" />
+                            {userBranches.map((br) => (
+                                <button key={br} onClick={() => setActiveBranch(br)}
+                                    className={`px-5 md:px-6 py-2.5 md:py-3 rounded-xl text-[9px] md:text-[10px] font-black tracking-[0.2em] transition-all whitespace-nowrap flex-1 md:flex-none ${activeBranch === br ? 'bg-white text-orange-600 shadow-md' : 'text-gray-500 hover:text-gray-900'}`}>
+                                    {br}
+                                </button>
+                            ))}
+                        </div>
+
+                        {!fetchingInventory && inventory.length > 0 && (
+                            <div className="flex items-center gap-1.5 md:gap-2 bg-white border border-gray-200 p-1.5 rounded-2xl w-full lg:flex-1 overflow-x-auto custom-scrollbar shadow-sm">
+                                <Filter size={14} className="text-orange-500 ml-3 mr-1 shrink-0" />
+                                {uniqueCategories.map(cat => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => {
+                                            setActiveCategory(cat);
+                                            setSelectedItem(null); // Reset selection when category changes
+                                        }}
+                                        className={`px-4 py-2.5 md:py-3 rounded-xl text-[9px] md:text-[10px] font-black tracking-widest uppercase whitespace-nowrap transition-all ${activeCategory === cat
+                                                ? 'bg-gray-900 text-white shadow-md'
+                                                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+                                            }`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 
+                {/* 1180px iPad landscape triggers lg:grid-cols-3 cleanly */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                     {/* LEFT: New Transaction */}
-                    <div className="lg:col-span-2 bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-gray-100 h-fit">
+                    <div className="lg:col-span-2 bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-sm border border-gray-100 h-fit">
                         <h2 className="text-lg md:text-xl font-black uppercase mb-6 md:mb-8 flex items-center gap-3">
                             <ShoppingCart className="text-orange-500" size={24} /> New Transaction
                         </h2>
@@ -161,13 +198,13 @@ export default function Sales() {
                                 <label className="block text-[9px] md:text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Select Product</label>
                                 <select
                                     className="w-full bg-gray-50 p-4 md:p-5 rounded-2xl md:rounded-3xl outline-none focus:ring-2 focus:ring-orange-500/20 border border-transparent focus:border-orange-500/50 font-bold text-xs md:text-sm appearance-none cursor-pointer"
-                                    onChange={(e) => setSelectedItem(inventory.find(i => i.id === e.target.value))}
+                                    onChange={(e) => setSelectedItem(filteredInventory.find(i => i.id === e.target.value))}
                                     value={selectedItem?.id || ''}
                                     required
                                     disabled={userBranches.length === 0}
                                 >
-                                    <option value="">-- Choose Item from {activeBranch || 'Branch'} --</option>
-                                    {inventory.map(item => (
+                                    <option value="">-- Choose Item from {activeCategory === 'ALL' ? 'Menu' : activeCategory} --</option>
+                                    {filteredInventory.map(item => (
                                         <option key={item.id} value={item.id}>
                                             {item.product_name} (Stock: {item.current_stock})
                                         </option>
@@ -189,7 +226,7 @@ export default function Sales() {
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 pt-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 pt-2 md:pt-4">
                                 <div className="space-y-3">
                                     <label className="block text-[9px] md:text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Quantity Sold</label>
                                     <input
@@ -217,7 +254,7 @@ export default function Sales() {
                     </div>
 
                     {/* RIGHT: Stock Check */}
-                    <div className="lg:col-span-1 bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 text-white shadow-2xl h-fit w-full">
+                    <div className="lg:col-span-1 bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 text-white shadow-2xl h-fit w-full">
                         <div className="flex justify-between items-center mb-6 md:mb-8">
                             <h2 className="text-base md:text-lg font-black uppercase tracking-widest flex items-center gap-3">
                                 <AlertTriangle className="text-orange-500" size={24} /> Stock Check
@@ -227,11 +264,14 @@ export default function Sales() {
                             </button>
                         </div>
                         <div className="space-y-3 md:space-y-4 max-h-[400px] md:max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                            {inventory.map(item => (
+                            {filteredInventory.map(item => (
                                 <div key={item.id} className="flex justify-between items-center p-3 md:p-4 rounded-xl md:rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
                                     <div className="truncate pr-3 min-w-0">
                                         <p className="font-bold text-xs md:text-sm truncate uppercase tracking-tight">{item.product_name}</p>
-                                        <p className="text-[8px] md:text-[9px] text-gray-500 uppercase font-black mt-1 tracking-widest truncate">{item.sku || 'No SKU'}</p>
+                                        <div className="flex gap-1 mt-1">
+                                            <span className="text-[8px] md:text-[9px] text-gray-500 uppercase font-black tracking-widest truncate">{item.sku || 'No SKU'}</span>
+                                            <span className="text-[8px] md:text-[9px] text-gray-600 uppercase font-black tracking-widest">• {item.unit || 'UNIT'}</span>
+                                        </div>
                                     </div>
                                     <div className="text-right flex-shrink-0">
                                         <p className={`font-black text-sm md:text-base ${item.current_stock <= (item.re_order_level || 5) ? 'text-red-500 animate-pulse' : 'text-green-500'}`}>
@@ -240,10 +280,10 @@ export default function Sales() {
                                     </div>
                                 </div>
                             ))}
-                            {inventory.length === 0 && (
+                            {filteredInventory.length === 0 && (
                                 <div className="text-center py-10">
                                     <p className="text-gray-600 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em]">
-                                        {activeBranch ? `No items in ${activeBranch}` : 'No branch selected'}
+                                        {activeBranch ? 'No items found' : 'No branch selected'}
                                     </p>
                                 </div>
                             )}

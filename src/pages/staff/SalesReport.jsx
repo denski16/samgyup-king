@@ -81,7 +81,8 @@ export default function StaffSalesReport() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <StaffSidebar />
 
-            <main className="flex-1 p-4 pt-20 md:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: Keeps pt-24 until xl: breakpoint where sidebar docks */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
                 <header className="mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight italic">
@@ -91,14 +92,14 @@ export default function StaffSalesReport() {
                             End-of-day summary for {todayFormatted}.
                         </p>
                     </div>
-                    <button onClick={fetchTodaySales} className="p-3 bg-white border border-gray-200 rounded-2xl hover:text-orange-500 shadow-sm active:scale-90 transition-all">
+                    <button onClick={fetchTodaySales} className="p-3 md:p-3.5 bg-white border border-gray-200 rounded-2xl md:rounded-xl hover:text-orange-500 shadow-sm active:scale-90 transition-all">
                         <RefreshCcw size={18} className={loading ? "animate-spin text-orange-600" : ""} />
                     </button>
                 </header>
 
                 {/* Branch Selection - Mobile Swipeable */}
                 {userBranches.length > 0 && (
-                    <div className="flex gap-2 mb-8 bg-gray-200/50 p-1.5 rounded-2xl w-full md:w-fit items-center overflow-x-auto custom-scrollbar">
+                    <div className="flex gap-2 mb-8 bg-gray-200/50 p-1.5 rounded-2xl w-full md:w-fit items-center overflow-x-auto custom-scrollbar shrink-0">
                         <Store size={14} className="text-gray-400 ml-3 mr-1 shrink-0" />
                         {userBranches.map((br) => (
                             <button key={br} onClick={() => setActiveBranch(br)}
@@ -109,15 +110,16 @@ export default function StaffSalesReport() {
                     </div>
                 )}
 
-                {/* Summary Cards - Responsive Grid */}
+                {/* Summary Cards - Responsive Grid triggers 3-cols at lg: (1024px) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
                     <ReportCard icon={<PhilippinePeso size={24} />} label="Total Revenue" value={`₱${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="bg-orange-600" />
                     <ReportCard icon={<Package size={24} />} label="Items Sold" value={stats.itemsSold} color="bg-gray-900" />
                     <ReportCard icon={<Receipt size={24} />} label="Transactions" value={stats.transactions} color="bg-blue-600" spanFullOnMobile />
                 </div>
 
-                {/* --- MOBILE LEDGER (Cards) --- */}
-                <div className="md:hidden space-y-4">
+                {/* --- MOBILE/PORTRAIT IPAD LEDGER (Cards) --- */}
+                {/* Hides at lg: (1024px) so landscape iPad gets the full table */}
+                <div className="lg:hidden space-y-4">
                     <h2 className="text-sm font-black uppercase tracking-widest text-gray-400 mb-2 flex items-center gap-2">
                         <Clock size={16} /> Sales History
                     </h2>
@@ -132,20 +134,21 @@ export default function StaffSalesReport() {
                                     <p className="text-[10px] font-black bg-gray-900 text-white px-2 py-1 rounded-md uppercase tracking-widest">
                                         {new Date(sale.sale_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
-                                    <p className="font-black italic text-orange-600">₱{sale.total_price.toLocaleString()}</p>
+                                    <p className="font-black italic text-orange-600 text-lg">₱{sale.total_price.toLocaleString()}</p>
                                 </div>
                                 <div className="flex justify-between items-end">
-                                    <p className="font-black uppercase text-xs text-gray-800 truncate pr-4">{sale.product_name}</p>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Qty: {sale.quantity_sold}</p>
+                                    <p className="font-black uppercase text-xs md:text-sm text-gray-800 truncate pr-4">{sale.product_name}</p>
+                                    <p className="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">Qty: {sale.quantity_sold}</p>
                                 </div>
                             </div>
                         ))
                     )}
                 </div>
 
-                {/* --- DESKTOP LEDGER (Table) --- */}
-                <div className="hidden md:block bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                {/* --- DESKTOP/LANDSCAPE IPAD LEDGER (Table) --- */}
+                {/* Shows at lg: (1024px) -> Covers your 1180x820 screen natively */}
+                <div className="hidden lg:block bg-white rounded-[2.5rem] shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="p-6 md:p-8 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                         <FileBarChart className="text-orange-600" size={18} />
                         <h2 className="font-black uppercase tracking-widest text-xs">Today's Detailed Ledger</h2>
                     </div>
@@ -161,6 +164,8 @@ export default function StaffSalesReport() {
                         <tbody className="divide-y divide-gray-100 text-sm">
                             {loading ? (
                                 <tr><td colSpan="4" className="p-20 text-center text-gray-400 font-black animate-pulse uppercase tracking-widest">Generating Report...</td></tr>
+                            ) : sales.length === 0 ? (
+                                <tr><td colSpan="4" className="p-20 text-center text-gray-400 font-bold uppercase tracking-widest">No sales logged today.</td></tr>
                             ) : (
                                 sales.map((sale) => (
                                     <tr key={sale.id} className="hover:bg-orange-50/20 transition-colors group">
@@ -171,7 +176,7 @@ export default function StaffSalesReport() {
                                         </td>
                                         <td className="p-6 font-black uppercase tracking-tight text-gray-600">{sale.product_name}</td>
                                         <td className="p-6 font-bold text-center">{sale.quantity_sold}</td>
-                                        <td className="p-6 text-right font-black italic text-orange-600">₱{sale.total_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                        <td className="p-6 text-right font-black italic text-orange-600 text-base">₱{sale.total_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                                     </tr>
                                 ))
                             )}
@@ -185,9 +190,10 @@ export default function StaffSalesReport() {
 
 // Helper Card Component
 function ReportCard({ icon, label, value, color, spanFullOnMobile }) {
+    // Matched the padding and rounded corners to the Dashboard StatCard
     return (
-        <div className={`bg-white p-6 md:p-8 rounded-[2rem] shadow-sm border border-gray-100 flex items-center gap-4 md:gap-6 ${spanFullOnMobile ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
-            <div className={`${color} text-white p-3 md:p-4 rounded-xl md:rounded-2xl shadow-lg`}>
+        <div className={`bg-white p-5 md:p-6 lg:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 flex items-center gap-4 md:gap-6 ${spanFullOnMobile ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
+            <div className={`${color} text-white p-3 md:p-4 rounded-xl md:rounded-2xl shadow-lg flex-shrink-0`}>
                 {icon}
             </div>
             <div className="min-w-0">

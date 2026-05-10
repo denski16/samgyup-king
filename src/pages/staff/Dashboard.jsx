@@ -56,24 +56,27 @@ export default function StaffDashboard() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <StaffSidebar />
 
-            {/* RESPONSIVE UPGRADE: Added pt-20 and px-4 for mobile spacing */}
-            <main className="flex-1 p-4 pt-20 md:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: 
+              Kept pt-24 for mobile and md (iPad) so it clears the hamburger menu.
+              Only switch to xl:p-8 (standard padding without huge top gap) when the sidebar docks! 
+            */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
                 <header className="flex justify-between items-start mb-8 md:mb-10">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-gray-900">
                             Staff <span className="text-orange-600">Dashboard</span>
                         </h1>
-                        <p className="text-sm md:text-base text-gray-500 font-medium italic">Current branch overview and shift performance.</p>
+                        <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Current branch overview and shift performance.</p>
                     </div>
                     <button
                         onClick={fetchStaffData}
-                        className="p-3 bg-white border border-gray-200 rounded-2xl hover:text-orange-500 shadow-sm transition-all active:scale-90"
+                        className="p-3 md:p-3.5 bg-white border border-gray-200 rounded-2xl md:rounded-xl hover:text-orange-500 shadow-sm transition-all active:scale-90"
                     >
                         <RefreshCcw size={18} className={loading ? "animate-spin text-orange-600" : ""} />
                     </button>
                 </header>
 
-                {/* Quick Stats Cards - RESPONSIVE: Stack on mobile, grid on desktop */}
+                {/* Quick Stats Cards - RESPONSIVE: Stack on mobile, grid on desktop. Changed to lg:grid-cols-3 to trigger at 1024px */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8 md:mb-10">
                     <StatCard
                         icon={<PhilippinePeso size={24} />}
@@ -96,10 +99,10 @@ export default function StaffDashboard() {
                     />
                 </div>
 
-                {/* Layout: Recent Activity & Reminders - RESPONSIVE: Stack on mobile */}
+                {/* Layout: Recent Activity & Reminders - RESPONSIVE: Stack on mobile and portrait iPad */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
                     {/* Recent Branch Activity */}
-                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-sm border border-gray-100 h-fit">
+                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-6 xl:p-8 shadow-sm border border-gray-100 h-fit">
                         <h2 className="text-lg md:text-xl font-black uppercase tracking-tight mb-6 flex items-center gap-2">
                             <TrendingUp className="text-orange-600" size={20} /> Recent Sales
                         </h2>
@@ -125,7 +128,7 @@ export default function StaffDashboard() {
                     </div>
 
                     {/* Staff Reminders / Status */}
-                    <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 shadow-2xl text-white relative overflow-hidden">
+                    <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-5 md:p-6 xl:p-8 shadow-2xl text-white relative overflow-hidden">
                         <Utensils size={100} className="absolute -bottom-6 -right-6 text-white/5 rotate-12 pointer-events-none" />
 
                         <h2 className="text-lg md:text-xl font-black uppercase tracking-tight mb-6 flex items-center gap-2 italic relative z-10">
@@ -149,8 +152,9 @@ export default function StaffDashboard() {
 }
 
 function StatCard({ icon, label, value, color, spanFullOnMobile }) {
+    // Changed xl:col-span-1 to lg:col-span-1 so the third card jumps up at 1024px instead of 1280px
     return (
-        <div className={`bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 flex items-center gap-4 md:gap-6 ${spanFullOnMobile ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
+        <div className={`bg-white p-5 md:p-6 lg:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 flex items-center gap-4 md:gap-6 ${spanFullOnMobile ? 'sm:col-span-2 lg:col-span-1' : ''}`}>
             <div className={`${color} text-white p-3 md:p-4 rounded-xl md:rounded-2xl shadow-lg flex-shrink-0`}>
                 {icon}
             </div>

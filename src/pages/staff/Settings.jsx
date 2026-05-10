@@ -104,16 +104,17 @@ export default function StaffSettings() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <StaffSidebar />
 
-            <main className="flex-1 p-4 pt-20 md:p-8 w-full max-w-[100vw] overflow-x-hidden">
+            {/* RESPONSIVE UPGRADE: Keeps pt-24 until xl: breakpoint where sidebar docks */}
+            <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 overflow-y-auto w-full max-w-[100vw] overflow-x-hidden">
                 <header className="mb-8 md:mb-10">
                     <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight">Profile <span className="text-orange-600">Settings</span></h1>
-                    <p className="text-sm md:text-base text-gray-500 font-medium italic">Manage your security and view assigned locations.</p>
+                    <p className="text-sm md:text-base text-gray-500 font-medium italic mt-1">Manage your security and view assigned locations.</p>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 max-w-5xl">
 
                     {/* SECURITY CARD */}
-                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-sm border border-gray-100 flex flex-col justify-between">
+                    <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-sm border border-gray-100 flex flex-col justify-between">
                         <section>
                             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-600 mb-6 flex items-center gap-2">
                                 <ShieldCheck size={16} /> Security Credentials
@@ -139,26 +140,28 @@ export default function StaffSettings() {
                     </div>
 
                     {/* ASSIGNED BRANCHES CARD */}
-                    <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
-                        <Store size={120} className="absolute -bottom-10 -right-10 text-white/5 rotate-12" />
+                    <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-2xl relative overflow-hidden flex flex-col justify-between">
+                        <Store size={120} className="absolute -bottom-10 -right-10 text-white/5 rotate-12 pointer-events-none" />
 
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 mb-6 flex items-center gap-2">
-                            <Store size={16} /> Assigned Branches
-                        </h3>
+                        <div>
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-orange-500 mb-6 flex items-center gap-2 relative z-10">
+                                <Store size={16} /> Assigned Branches
+                            </h3>
 
-                        <div className="flex flex-wrap gap-2 relative z-10">
-                            {staffProfile?.branches?.length > 0 ? (
-                                staffProfile.branches.map((br) => (
-                                    <span key={br} className="px-4 py-2 bg-white/10 border border-white/10 rounded-xl text-white font-black text-[10px] uppercase tracking-widest">
-                                        {br}
-                                    </span>
-                                ))
-                            ) : (
-                                <p className="text-gray-500 text-xs italic">No branches currently assigned.</p>
-                            )}
+                            <div className="flex flex-wrap gap-2 relative z-10">
+                                {staffProfile?.branches?.length > 0 ? (
+                                    staffProfile.branches.map((br) => (
+                                        <span key={br} className="px-4 py-2 bg-white/10 border border-white/10 rounded-xl text-white font-black text-[10px] uppercase tracking-widest">
+                                            {br}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <p className="text-gray-500 text-xs italic">No branches currently assigned.</p>
+                                )}
+                            </div>
                         </div>
 
-                        <div className="mt-12 pt-6 border-t border-white/5">
+                        <div className="mt-12 pt-6 border-t border-white/5 relative z-10">
                             <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest flex items-center gap-2">
                                 <RefreshCcw size={10} /> Shift Synchronization Active
                             </p>
@@ -174,7 +177,7 @@ export default function StaffSettings() {
                                 <h2 className="text-xl font-black uppercase tracking-tight flex items-center gap-2">
                                     <Lock className="text-orange-600" /> Security Update
                                 </h2>
-                                <button onClick={() => setShowPassModal(false)} className="text-gray-400 hover:text-gray-900"><X size={24} /></button>
+                                <button onClick={() => setShowPassModal(false)} className="text-gray-400 hover:text-gray-900 transition-colors"><X size={24} /></button>
                             </div>
 
                             {status.msg && (
@@ -187,10 +190,10 @@ export default function StaffSettings() {
                             <form onSubmit={handleUpdatePassword} className="space-y-4">
                                 {/* Current */}
                                 <div className="relative">
-                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1">Current Password</label>
-                                    <div className="relative">
-                                        <input required type={showCurrent ? "text" : "password"} className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm pr-12" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} />
-                                        <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-600">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1 tracking-widest">Current Password</label>
+                                    <div className="relative mt-1">
+                                        <input required type={showCurrent ? "text" : "password"} className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm pr-12 transition-all border border-transparent focus:bg-white focus:border-orange-200" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} />
+                                        <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-600 transition-colors">
                                             {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
                                         </button>
                                     </div>
@@ -198,10 +201,10 @@ export default function StaffSettings() {
 
                                 {/* New Password */}
                                 <div>
-                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1">New Strong Password</label>
-                                    <div className="relative">
-                                        <input required type={showNew ? "text" : "password"} className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm pr-12" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} />
-                                        <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-600">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1 tracking-widest">New Strong Password</label>
+                                    <div className="relative mt-1">
+                                        <input required type={showNew ? "text" : "password"} className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm pr-12 transition-all border border-transparent focus:bg-white focus:border-orange-200" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} />
+                                        <button type="button" onClick={() => setShowNew(!showNew)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-600 transition-colors">
                                             {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
                                         </button>
                                     </div>
@@ -214,18 +217,18 @@ export default function StaffSettings() {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1">Confirm New Password</label>
-                                    <input required type={showNew ? "text" : "password"} className="w-full bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} />
-                                    {passwords.confirm && !passwordsMatch && <p className="text-[9px] text-red-500 font-black uppercase mt-1 ml-1">Passwords mismatch</p>}
+                                <div className="pt-2">
+                                    <label className="text-[9px] font-black text-gray-400 uppercase ml-1 tracking-widest">Confirm New Password</label>
+                                    <input required type={showNew ? "text" : "password"} className="w-full mt-1 bg-gray-50 p-4 rounded-xl outline-none focus:ring-2 focus:ring-orange-500 font-bold text-sm transition-all border border-transparent focus:bg-white focus:border-orange-200" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} />
+                                    {passwords.confirm && !passwordsMatch && <p className="text-[9px] text-red-500 font-black uppercase mt-2 ml-1 tracking-widest animate-pulse">Passwords mismatch</p>}
                                 </div>
 
                                 <button
                                     type="submit"
                                     disabled={loading || !isStrongEnough || !passwordsMatch}
-                                    className="w-full py-5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl mt-4 transition-all active:scale-95 disabled:opacity-30 disabled:grayscale"
+                                    className="w-full py-5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest rounded-2xl shadow-xl mt-6 transition-all active:scale-95 disabled:opacity-30 disabled:grayscale flex items-center justify-center"
                                 >
-                                    {loading ? <RefreshCcw className="animate-spin mx-auto" size={20} /> : 'Update Security'}
+                                    {loading ? <RefreshCcw className="animate-spin" size={20} /> : 'Update Security'}
                                 </button>
                             </form>
                         </div>
@@ -238,8 +241,8 @@ export default function StaffSettings() {
 
 function Requirement({ label, met }) {
     return (
-        <div className={`flex items-center gap-2 text-[8px] font-black uppercase ${met ? 'text-green-600' : 'text-gray-300'}`}>
-            <Check size={10} className={met ? 'opacity-100' : 'opacity-20'} /> {label}
+        <div className={`flex items-center gap-2 text-[8px] font-black uppercase tracking-widest transition-colors ${met ? 'text-green-600' : 'text-gray-400'}`}>
+            <Check size={12} className={`transition-opacity ${met ? 'opacity-100' : 'opacity-30'}`} /> {label}
         </div>
     );
 }
