@@ -105,30 +105,30 @@ export default function StaffSidebar() {
 
     return (
         <>
-            {/* --- MOBILE TOP-LEFT MENU BUTTON --- */}
+            {/* --- MOBILE TOP-LEFT MENU BUTTON (Changed to xl:hidden) --- */}
             <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden fixed top-5 left-5 z-[130] p-3 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-md hover:text-orange-600 active:scale-95 transition-all"
+                className="xl:hidden fixed top-5 left-5 z-[130] p-3 bg-white border border-gray-200 text-gray-900 rounded-xl shadow-md hover:text-orange-600 active:scale-95 transition-all"
             >
                 <Menu size={24} />
             </button>
 
-            {/* --- MOBILE BACKDROP --- */}
+            {/* --- MOBILE BACKDROP (Changed to xl:hidden) --- */}
             {isMobileMenuOpen && (
                 <div
-                    className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[140] transition-opacity"
+                    className="xl:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[140] transition-opacity"
                     onClick={() => setIsMobileMenuOpen(false)}
                 />
             )}
 
-            {/* --- SIDEBAR --- */}
-            <aside className={`fixed inset-y-0 left-0 z-[150] w-64 bg-gray-900 text-white flex flex-col h-screen shadow-2xl border-r border-white/5 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:sticky md:top-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            {/* --- SIDEBAR (Changed from lg: to xl: breakpoints) --- */}
+            <aside className={`fixed inset-y-0 left-0 z-[150] w-64 bg-gray-900 text-white flex flex-col h-screen shadow-2xl border-r border-white/5 transform transition-transform duration-300 ease-in-out xl:translate-x-0 xl:sticky xl:top-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
 
                 <div className="p-8 border-b border-gray-800 relative">
-                    {/* Mobile Close Button */}
+                    {/* Mobile Close Button (Changed to xl:hidden) */}
                     <button
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className="md:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-white transition-colors rounded-lg bg-white/5 z-10"
+                        className="xl:hidden absolute top-4 right-4 p-2 text-gray-500 hover:text-white transition-colors rounded-lg bg-white/5 z-10"
                     >
                         <X size={16} />
                     </button>
