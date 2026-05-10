@@ -2,25 +2,30 @@ import { useState, useEffect } from 'react';
 import { supabase } from "../../supabaseClient";
 import AdminSidebar from "../../components/AdminSidebar";
 import {
-    TrendingUp,
-    ShoppingBag,
-    Package,
-    ArrowUpRight,
-    RefreshCcw,
-    AlertTriangle,
-    BarChart2,
-    CalendarDays,
-    LineChart,
-    Wallet // Added for Profit Card
+    TrendingUp, ShoppingBag, Package, ArrowUpRight,
+    RefreshCcw, AlertTriangle, BarChart2, LineChart, Wallet
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
+
+// --- HELPER FUNCTION: FORMAT STOCK ---
+function formatStock(currentStock, conversionQty, bulkUnit, baseUnit) {
+    if (!conversionQty || conversionQty <= 1) {
+        return `${currentStock} ${baseUnit || 'PC'}`;
+    }
+    const bulks = Math.floor(currentStock / conversionQty);
+    const leftover = currentStock % conversionQty;
+
+    if (bulks > 0 && leftover > 0) return `${bulks} ${bulkUnit} & ${leftover} ${baseUnit}`;
+    if (bulks > 0) return `${bulks} ${bulkUnit}`;
+    return `${currentStock} ${baseUnit}`;
+}
 
 export default function Dashboard() {
     const filters = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Yearly'];
     const [filter, setFilter] = useState('Daily');
     const [loading, setLoading] = useState(true);
 
-    // Stats State - Added Profit
+    // Stats State
     const [stats, setStats] = useState({ revenue: 0, profit: 0, transactions: 0, itemsSold: 0 });
     const [topProducts, setTopProducts] = useState([]);
     const [branchData, setBranchData] = useState([]);
@@ -37,10 +42,10 @@ export default function Dashboard() {
     async function fetchDashboardData() {
         setLoading(true);
         const now = new Date();
-        const todayStr = now.toDateString(); // "Fri May 08 2026"
+        const todayStr = now.toDateString();
 
         let filterStartDate = new Date();
-        if (filter === 'Daily') filterStartDate.setHours(0, 0, 0, 0); // Start of today (Local Time)
+        if (filter === 'Daily') filterStartDate.setHours(0, 0, 0, 0);
         else if (filter === 'Weekly') filterStartDate.setDate(now.getDate() - 7);
         else if (filter === 'Monthly') filterStartDate.setDate(now.getDate() - 30);
         else if (filter === 'Quarterly') filterStartDate.setDate(now.getDate() - 90);
@@ -69,14 +74,13 @@ export default function Dashboard() {
             const nowTime = now.getTime();
 
             allSales.forEach(sale => {
-                const sDate = new Date(sale.sale_date); // JS auto-converts UTC to Local Time
+                const sDate = new Date(sale.sale_date);
                 const sTime = sDate.getTime();
                 const diffDays = (nowTime - sTime) / (1000 * 3600 * 24);
-                const amt = Number(sale.total_price);
-                const b = sale.branch;
+                const amt = Number(sale.total_price) || 0;
+                const b = (sale.branch || '').trim().toUpperCase();
 
                 if (matrix[b]) {
-                    // Timezone Fix: Check if calendar date matches today exactly
                     if (sDate.toDateString() === todayStr) matrix[b].daily += amt;
                     if (diffDays <= 7) matrix[b].weekly += amt;
                     if (diffDays <= 30) matrix[b].monthly += amt;
@@ -84,9 +88,9 @@ export default function Dashboard() {
                     if (diffDays <= 365) matrix[b].yearly += amt;
                 }
             });
+
             setBranchMatrix(matrix);
 
-            // Matrix Chart Data Transformation
             setMatrixChartData([
                 { name: 'Daily', SUBIC: matrix['SUBIC'].daily, MINIMART: matrix['MINIMART'].daily, CASTILLEJOS: matrix['CASTILLEJOS'].daily, 'KSK VARIETY': matrix['KSK VARIETY'].daily },
                 { name: 'Weekly', SUBIC: matrix['SUBIC'].weekly, MINIMART: matrix['MINIMART'].weekly, CASTILLEJOS: matrix['CASTILLEJOS'].weekly, 'KSK VARIETY': matrix['KSK VARIETY'].weekly },
@@ -95,28 +99,95 @@ export default function Dashboard() {
                 { name: 'Yearly', SUBIC: matrix['SUBIC'].yearly, MINIMART: matrix['MINIMART'].yearly, CASTILLEJOS: matrix['CASTILLEJOS'].yearly, 'KSK VARIETY': matrix['KSK VARIETY'].yearly },
             ]);
 
-            // Top-Level Stats (Respecting the active filter)
+            // Filter sales based on active tab
             const filteredSales = allSales.filter(s => {
                 const d = new Date(s.sale_date);
                 if (filter === 'Daily') return d.toDateString() === todayStr;
                 return d >= filterStartDate;
             });
 
-            const totalRevenue = filteredSales.reduce((acc, s) => acc + Number(s.total_price), 0);
+            let totalRevenue = 0;
+            let totalCost = 0;
+            let totalItemsSold = 0;
+            const productMap = {};
+
+            filteredSales.forEach(s => {
+                const salePrice = Number(s.total_price) || 0;
+                let rawQty = Number(s.quantity_sold) || 0;
+                let baseQtySold = rawQty;
+
+                totalRevenue += salePrice;
+
+                // CRITICAL FIX: Match by both product name AND branch to avoid mixing data
+                const invItem = inventory && inventory.find(i =>
+                    i.product_name && s.product_name &&
+                    i.product_name.toUpperCase() === s.product_name.toUpperCase() &&
+                    i.branch === s.branch
+                );
+
+                if (invItem) {
+                    const bulkUnit = (invItem.bulk_unit || '').toUpperCase();
+                    const midUnit = (invItem.mid_unit || '').toUpperCase();
+                    const baseUnit = (invItem.base_unit || 'PC').toUpperCase();
+
+                    const convQty = Number(invItem.conversion_qty) || 1;
+                    const midConvQty = Number(invItem.mid_conversion_qty) || 1;
+                    const costPerUnit = Number(invItem.cost_per_unit) || 0; // Supplier cost (usually the Bulk item)
+
+                    const priceBulk = Number(invItem.price_per_bulk) || -1;
+                    const priceMid = Number(invItem.price_per_mid) || -1;
+
+                    const unitPrice = rawQty > 0 ? (salePrice / rawQty) : 0;
+                    let identifiedUnit = (s.unit_sold || '').toUpperCase();
+
+                    // REVERSE ENGINEER THE UNIT: If unit isn't specified properly in sales, we guess by the price
+                    if (!identifiedUnit) {
+                        if (priceBulk > 0 && Math.abs(unitPrice - priceBulk) < 2) identifiedUnit = bulkUnit;
+                        else if (priceMid > 0 && Math.abs(unitPrice - priceMid) < 2) identifiedUnit = midUnit;
+                        else identifiedUnit = baseUnit;
+                    }
+
+                    // 1. Convert to TRUE Base Units (e.g. 1 Sack -> 25 Kilos)
+                    if (identifiedUnit === bulkUnit && convQty > 1) {
+                        baseQtySold = rawQty * convQty;
+                    } else if (identifiedUnit === midUnit && midConvQty > 1) {
+                        baseQtySold = rawQty * midConvQty;
+                    }
+
+                    // 2. Determine TRUE Cost per Base Unit (e.g. 1050 sack / 25 kilos = 42 cost per kilo)
+                    let divisor = 1;
+                    if (convQty > 1) {
+                        divisor = convQty;
+                    } else if (midConvQty > 1) {
+                        divisor = midConvQty;
+                    }
+
+                    const trueBaseCost = costPerUnit / divisor;
+
+                    // 3. Add to total COGS
+                    totalCost += (trueBaseCost * baseQtySold);
+                }
+
+                totalItemsSold += baseQtySold;
+                const pName = s.product_name || 'UNKNOWN';
+                productMap[pName] = (productMap[pName] || 0) + baseQtySold;
+            });
+
+            // Prevent NaN from appearing on UI if calculation fails for any reason
+            const calculatedProfit = isNaN(totalRevenue - totalCost) ? 0 : (totalRevenue - totalCost);
+
+            // Transactions count
+            const uniqueTransactions = new Set(filteredSales.filter(s => s.transaction_id).map(s => s.transaction_id));
+            const legacyTransactions = filteredSales.filter(s => !s.transaction_id).length;
+            const totalTransactions = uniqueTransactions.size + legacyTransactions;
 
             setStats({
                 revenue: totalRevenue,
-                // PROFIT FORMULA: Change the '0.35' below to whatever your margin is, or calculate based on cost per item if available!
-                profit: totalRevenue * 0.35,
-                transactions: filteredSales.length,
-                itemsSold: filteredSales.reduce((acc, s) => acc + Number(s.quantity_sold), 0)
+                profit: calculatedProfit,
+                transactions: totalTransactions,
+                itemsSold: totalItemsSold
             });
 
-            // Top Products Mapping
-            const productMap = {};
-            filteredSales.forEach(s => {
-                productMap[s.product_name] = (productMap[s.product_name] || 0) + Number(s.quantity_sold);
-            });
             setTopProducts(Object.entries(productMap)
                 .map(([name, qty]) => ({ name, qty }))
                 .sort((a, b) => b.qty - a.qty)
@@ -124,12 +195,17 @@ export default function Dashboard() {
 
             // Branch Chart Mapping
             const branchMap = { 'SUBIC': 0, 'MINIMART': 0, 'CASTILLEJOS': 0, 'KSK VARIETY': 0 };
-            filteredSales.forEach(s => { if (branchMap[s.branch] !== undefined) branchMap[s.branch] += Number(s.total_price); });
+            filteredSales.forEach(s => {
+                const branchName = (s.branch || '').trim().toUpperCase();
+                if (branchMap[branchName] !== undefined) {
+                    branchMap[branchName] += (Number(s.total_price) || 0);
+                }
+            });
             setBranchData(Object.keys(branchMap).map(key => ({ name: key, revenue: branchMap[key] })));
         }
 
         if (inventory) {
-            setCriticalStock(inventory.filter(item => Number(item.current_stock) <= Number(item.re_order_level)));
+            setCriticalStock(inventory.filter(item => Number(item.current_stock || 0) <= Number(item.re_order_level || 0)));
         }
 
         setLoading(false);
@@ -140,7 +216,7 @@ export default function Dashboard() {
         active && payload && payload.length && (
             <div className="bg-gray-900 text-white p-3 rounded-xl shadow-2xl border border-gray-700">
                 <p className="text-[10px] font-black uppercase text-gray-400 mb-1">{payload[0].payload.name}</p>
-                <p className="text-xl font-black text-orange-500">₱{payload[0].value.toLocaleString()}</p>
+                <p className="text-xl font-black text-orange-500">₱{Number(payload[0].value || 0).toLocaleString()}</p>
             </div>
         )
     );
@@ -155,7 +231,7 @@ export default function Dashboard() {
                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }}></span>
                             <span className="text-[10px] font-bold">{entry.name}</span>
                         </div>
-                        <span className="text-xs font-black">₱{entry.value.toLocaleString()}</span>
+                        <span className="text-xs font-black">₱{Number(entry.value || 0).toLocaleString()}</span>
                     </div>
                 ))}
             </div>
@@ -166,7 +242,6 @@ export default function Dashboard() {
         <div className="flex min-h-screen bg-gray-50 text-gray-900 font-sans">
             <AdminSidebar />
 
-            {/* RESPONSIVE UPGRADE: pt-24 provides clearance for mobile menu up to xl: */}
             <main className="flex-1 p-4 pt-24 md:p-6 md:pt-24 xl:p-8 w-full max-w-[100vw] overflow-x-hidden">
                 <header className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 md:mb-10 gap-6">
                     <div>
@@ -189,10 +264,9 @@ export default function Dashboard() {
                     </div>
                 </header>
 
-                {/* SUMMARY CARDS - lg:grid-cols-4 makes them single row on 1180px iPad */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                     <Card icon={<TrendingUp />} label="Total Revenue" value={`₱${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="orange" footer={`${filter} Sales`} />
-                    <Card icon={<Wallet />} label="Net Profit (Est)" value={`₱${stats.profit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="green" footer={`${filter} Return`} />
+                    <Card icon={<Wallet />} label="Net Profit (True)" value={`₱${stats.profit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="green" footer={`${filter} Return`} />
                     <Card icon={<ShoppingBag />} label="Transactions" value={stats.transactions.toLocaleString()} color="blue" footer="Orders Logged" />
                     <Card icon={<Package />} label="Items Sold" value={stats.itemsSold.toLocaleString()} color="gray" footer="Units Dispatched" />
                 </div>
@@ -200,7 +274,6 @@ export default function Dashboard() {
                 {/* MAIN GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-8">
                     <div className="lg:col-span-2 space-y-6 md:space-y-8">
-                        {/* Active Chart */}
                         <div className="bg-gray-900 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 text-white shadow-2xl relative overflow-hidden">
                             <div className="flex justify-between items-center mb-8 relative z-10">
                                 <h3 className="text-sm md:text-lg font-black uppercase tracking-widest flex items-center gap-2">
@@ -222,7 +295,6 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Critical Stock */}
                         <div className="bg-red-50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 border border-red-100">
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-sm md:text-lg font-black uppercase tracking-widest text-red-900 flex items-center gap-2"><AlertTriangle className="text-red-500" /> Critical Stock</h3>
@@ -235,16 +307,24 @@ export default function Dashboard() {
                                             <p className="font-black text-gray-900 uppercase text-xs md:text-sm truncate">{item.product_name}</p>
                                             <p className="text-[8px] font-bold text-red-500 uppercase tracking-widest mt-1 truncate">{item.category}</p>
                                         </div>
-                                        <p className="text-2xl font-black text-red-600 leading-none">{item.current_stock}</p>
+                                        <div className="text-right shrink-0 pl-2">
+                                            <p className="text-lg md:text-xl font-black text-red-600 leading-none">
+                                                {formatStock(Number(item.current_stock || 0), Number(item.conversion_qty || 1), item.bulk_unit, item.base_unit)}
+                                            </p>
+                                            {(Number(item.conversion_qty || 1) > 1 || Number(item.mid_conversion_qty || 1) > 1) && (
+                                                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                                                    {item.current_stock} {item.base_unit} Total
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 )) : <p className="text-green-600 font-black uppercase text-xs col-span-2">All branches are fully stocked!</p>}
                             </div>
                         </div>
                     </div>
 
-                    {/* Top Sellers */}
                     <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-sm border border-gray-100 flex flex-col h-full">
-                        <h3 className="text-sm md:text-lg font-black uppercase tracking-widest mb-8 text-gray-900 flex justify-between items-center">Top Sellers <span className="text-[9px] text-gray-400 bg-gray-100 px-2 py-1 rounded-md">By Qty</span></h3>
+                        <h3 className="text-sm md:text-lg font-black uppercase tracking-widest mb-8 text-gray-900 flex justify-between items-center">Top Sellers <span className="text-[9px] text-gray-400 bg-gray-100 px-2 py-1 rounded-md">By Base Units</span></h3>
                         <div className="flex-1 flex flex-col justify-center space-y-6">
                             {topProducts.length > 0 ? topProducts.map((p, i) => (
                                 <div key={i} className="relative">
@@ -264,7 +344,6 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* MATRIX SECTION */}
                 <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 xl:p-10 shadow-sm border border-gray-100 overflow-hidden mb-8">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><LineChart size={24} /></div>
@@ -324,16 +403,14 @@ export default function Dashboard() {
     );
 }
 
-// Reusable Helper Component for the Top Cards
 function Card({ icon, label, value, color, footer }) {
     const colorClasses = {
         orange: "text-orange-50 group-hover:text-orange-100",
         blue: "text-blue-50 group-hover:text-blue-100",
         green: "text-green-50 group-hover:text-green-100",
-        gray: "text-gray-50 group-hover:text-gray-100" // Added for the 4th card
+        gray: "text-gray-50 group-hover:text-gray-100"
     };
     return (
-        // Removed the spanMobile logic here since we want them all side-by-side on lg screens anyway
         <div className={`bg-white p-5 md:p-6 lg:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-gray-100 relative overflow-hidden group`}>
             <div className={`absolute top-0 right-0 p-6 transition-colors ${colorClasses[color]}`}>{icon}</div>
             <p className="text-[8px] md:text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">{label}</p>
