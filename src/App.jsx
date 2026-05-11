@@ -19,8 +19,9 @@ import StaffDashboard from './pages/staff/Dashboard';
 import StaffInventory from './pages/staff/Inventory';
 import StaffSalesReport from './pages/staff/SalesReport';
 import StaffSettings from './pages/staff/Settings';
-import StaffSales from './pages/staff/Sales';       // <-- YOUR ORIGINAL SALES PAGE IS BACK
-import StaffCashier from './pages/staff/Cashier';   // <-- THE NEW POS PAGE IS HERE TOO
+import StaffSales from './pages/staff/Sales';
+import StaffCashier from './pages/staff/Cashier';
+import StaffExpenses from './pages/staff/StaffExpenses'; // <-- NEW IMPORT
 
 export default function App() {
   return (
@@ -69,15 +70,18 @@ export default function App() {
           path="/staff/inventory"
           element={<ProtectedRoute role="Staff"><StaffInventory /></ProtectedRoute>}
         />
-        {/* YOUR ORIGINAL SALES PAGE */}
         <Route
           path="/staff/sales"
           element={<ProtectedRoute role="Staff"><StaffSales /></ProtectedRoute>}
         />
-        {/* THE NEW POS PAGE (To test it out) */}
         <Route
           path="/staff/pos"
           element={<ProtectedRoute role="Staff"><StaffCashier /></ProtectedRoute>}
+        />
+        {/* --- NEW EXPENSES ROUTE --- */}
+        <Route
+          path="/staff/expenses"
+          element={<ProtectedRoute role="Staff"><StaffExpenses /></ProtectedRoute>}
         />
         <Route
           path="/staff/reports"
